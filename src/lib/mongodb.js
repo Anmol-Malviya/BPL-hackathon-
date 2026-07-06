@@ -1,4 +1,12 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+// Set DNS servers to Google and Cloudflare to resolve Atlas SRV records
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {
+  console.warn('Warning: Failed to set custom DNS servers in Node:', e);
+}
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://av:4328@av.elcl8qr.mongodb.net/Food-Company';
 
