@@ -60,39 +60,77 @@ function calculateShannonEntropy(str) {
 
 // Extract features as expected by the Kaggle model
 export function extractModelFeatures(urlString) {
-  let url = urlString.trim();
+  const url = urlString.trim();
   
-  // Clean URL format for parsing
-  let parsedUrl = null;
-  let isValid = 0;
-  let hostname = '';
-  let path = '';
-  let urlToParse = url;
+  // 1. is_https
+  const is_https = /^https:\/\//i.test(url) ? 1 : 0;
   
+  // Parse host
+  let host = '';
   try {
+    let urlToParse = url;
     if (!/^https?:\/\//i.test(urlToParse)) {
       urlToParse = 'https://' + urlToParse;
     }
-    parsedUrl = new URL(urlToParse);
-    isValid = 1;
-    hostname = parsedUrl.hostname;
-    path = parsedUrl.pathname;
+    const parsedUrl = new URL(urlToParse);
+    host = parsedUrl.hostname.toLowerCase();
   } catch (e) {
-    isValid = 0;
-    hostname = url.split('/')[0] || '';
-    path = url.substring(hostname.length) || '';
+    host = url.split('/')[0] || '';
   }
-
-  // Feature 1: url_length
+  
+  if (host.includes(':')) {
+    host = host.split(':')[0];
+  }
+  
+  // 2. url_length
   const url_length = url.length;
+  
+  // 3. domain_length
+  const domain_length = host.length;
+  
+  // 4. is_ip
+  const is_ip = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(host) ? 1 : 0;
+  
+  // 5. tld_length & subdomain_count
+  let tld_length = 0;
+  let subdomain_count = 0;
+  if (host && !is_ip) {
+    const parts = host.split('.');
+    if (parts.length >= 2) {
+      tld_length = parts[parts.length - 1].length;
+      subdomain_count = Math.max(0, parts.length - 2);
+    }
+  }
+  
+  // Count character types in URL
+  let letters = 0;
+  let digits = 0;
+  for (let i = 0; i < url.length; i++) {
+    const c = url[i];
+    if (/[a-zA-Z]/.test(c)) {
+      letters++;
+    } else if (/[0-9]/.test(c)) {
+      digits++;
+    }
+  }
+  const special = url.length - letters - digits;
+  
+  // Delimiter counts
+  const equals_count = (url.match(/=/g) || []).length;
+  const qmark_count = (url.match(/\?/g) || []).length;
+  const amp_count = (url.match(/&/g) || []).length;
+  const hyphen_count = (url.match(/-/g) || []).length;
+  const dots_count = (url.match(/\./g) || []).length;
+  const slash_count = (url.match(/\//g) || []).length;
+  
+  // Ratios
+  const letter_ratio = url_length > 0 ? letters / url_length : 0;
+  const digit_ratio = url_length > 0 ? digits / url_length : 0;
+  const special_ratio = url_length > 0 ? special / url_length : 0;
 
-  // Feature 2: valid_url
-  const valid_url = isValid;
-
-  // Feature 3: at_symbol
-  const at_symbol = url.includes('@') ? 1 : 0;
-
-  // Feature 4: sensitive_words_count
+  // UI-compatibility fields
+  const nb_dots = dots_count;
+  const isHttps = is_https;
   const sensitiveWords = [
     'confirm', 'account', 'banking', 'secure', 'login', 'signin', 
     'verify', 'webscr', 'ebayisapi', 'update', 'password', 'credential',
@@ -107,48 +145,29 @@ export function extractModelFeatures(urlString) {
       pos = lowerUrl.indexOf(word, pos + 1);
     }
   });
-
-  // Feature 5: path_length
-  const path_length = path.length;
-
-  // Feature 6: isHttps
-  const isHttps = /^https:\/\//i.test(urlToParse) ? 1 : 0;
-
-  // Feature 7: nb_dots
-  const nb_dots = (url.match(/\./g) || []).length;
-
-  // Feature 8: nb_hyphens
-  const nb_hyphens = (url.match(/-/g) || []).length;
-
-  // Feature 9: nb_and
-  const nb_and = (url.match(/&/g) || []).length;
-
-  // Feature 10: nb_or
-  const nb_or = (url.match(/\|/g) || []).length;
-
-  // Feature 11: nb_www
-  const nb_www = (lowerUrl.match(/www/g) || []).length;
-
-  // Feature 12: nb_com
-  const nb_com = (lowerUrl.match(/com/g) || []).length;
-
-  // Feature 13: nb_underscore
-  const nb_underscore = (url.match(/_/g) || []).length;
-
+  
   return {
     url_length,
-    valid_url,
-    at_symbol,
-    sensitive_words_count,
-    path_length,
-    isHttps,
+    domain_length,
+    is_ip,
+    tld_length,
+    subdomain_count,
+    is_https,
+    letters,
+    letter_ratio,
+    digits,
+    digit_ratio,
+    special,
+    special_ratio,
+    equals_count,
+    qmark_count,
+    amp_count,
+    hyphen_count,
+    dots_count,
+    slash_count,
     nb_dots,
-    nb_hyphens,
-    nb_and,
-    nb_or,
-    nb_www,
-    nb_com,
-    nb_underscore
+    isHttps,
+    sensitive_words_count
   };
 }
 

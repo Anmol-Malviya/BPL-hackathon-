@@ -10,8 +10,8 @@ def main():
         subprocess.check_call([sys.executable, "-m", "pip", "install", "kagglehub"])
         import kagglehub
 
-    print("Downloading dataset sunnykusawa/phishing-urls...")
-    path = kagglehub.dataset_download("sunnykusawa/phishing-urls")
+    print("Downloading dataset ndarvind/phiusiil-phishing-url-dataset...")
+    path = kagglehub.dataset_download("ndarvind/phiusiil-phishing-url-dataset")
     print(f"Dataset downloaded to: {path}")
 
     # List files in the downloaded path

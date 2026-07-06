@@ -176,53 +176,84 @@ object PhishingEngine {
 
         // Model feature extraction
         val urlLength = rawUrl.length
-        val atSymbol = if (rawUrl.contains("@")) 1 else 0
+        val domainLength = hostname.length
         
-        var sensitiveWordsCount = 0
-        val lowerUrl = rawUrl.lowercase()
-        for (word in SENSITIVE_WORDS) {
-            sensitiveWordsCount += countOccurrences(lowerUrl, word)
+        val ipPattern = Pattern.compile("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")
+        val isIp = if (ipPattern.matcher(hostname).matches()) 1.0 else 0.0
+        
+        var tldLength = 0.0
+        var subdomainCount = 0.0
+        if (hostname.isNotEmpty() && isIp == 0.0) {
+            val parts = hostname.split(".")
+            if (parts.size >= 2) {
+                tldLength = parts.last().length.toDouble()
+                subdomainCount = maxOf(0, parts.size - 2).toDouble()
+            }
         }
         
-        val pathLength = path.length
-        val nbDots = countOccurrences(rawUrl, ".")
-        val nbHyphens = countOccurrences(rawUrl, "-")
-        val nbAnd = countOccurrences(rawUrl, "&")
-        val nbOr = countOccurrences(rawUrl, "|")
-        val nbWww = countOccurrences(lowerUrl, "www")
-        val nbCom = countOccurrences(lowerUrl, "com")
-        val nbUnderscore = countOccurrences(rawUrl, "_")
+        val isHttpsVal = if (isHttps == 1) 1.0 else 0.0
+        
+        var letters = 0
+        var digits = 0
+        for (ch in rawUrl) {
+            if (ch.isLetter()) {
+                letters++
+            } else if (ch.isDigit()) {
+                digits++
+            }
+        }
+        val special = rawUrl.length - letters - digits
+        
+        val urlLengthDouble = urlLength.toDouble()
+        val letterRatio = if (urlLengthDouble > 0.0) letters.toDouble() / urlLengthDouble else 0.0
+        val digitRatio = if (urlLengthDouble > 0.0) digits.toDouble() / urlLengthDouble else 0.0
+        val specialRatio = if (urlLengthDouble > 0.0) special.toDouble() / urlLengthDouble else 0.0
+        
+        val equalsCount = countOccurrences(rawUrl, "=").toDouble()
+        val qmarkCount = countOccurrences(rawUrl, "?").toDouble()
+        val ampCount = countOccurrences(rawUrl, "&").toDouble()
+        val hyphenCount = countOccurrences(rawUrl, "-").toDouble()
+        val dotsCount = countOccurrences(rawUrl, ".").toDouble()
+        val slashCount = countOccurrences(rawUrl, "/").toDouble()
 
         // ML normalization parameters (from phishing_model_weights.json)
         val means = mapOf(
-            "url_length" to 57.9252, "valid_url" to 0.2801, "at_symbol" to 0.0084,
-            "sensitive_words_count" to 0.2323, "path_length" to 16.2134, "isHttps" to 0.4277,
-            "nb_dots" to 4.709, "nb_hyphens" to 0.5936, "nb_and" to 0.0153, "nb_or" to 0.1793,
-            "nb_www" to 0.2295, "nb_com" to 0.6471, "nb_underscore" to 0.1403
+            "url_length" to 35.297006, "domain_length" to 21.475954, "is_ip" to 0.002513,
+            "tld_length" to 2.756717, "subdomain_count" to 1.161035, "is_https" to 0.780053,
+            "letters" to 27.151864, "letter_ratio" to 0.777298, "digits" to 1.871933,
+            "digit_ratio" to 0.028374, "special" to 6.273209, "special_ratio" to 0.194328,
+            "equals_count" to 0.062803, "qmark_count" to 0.029379, "amp_count" to 0.036547,
+            "hyphen_count" to 0.35014, "dots_count" to 2.257734, "slash_count" to 2.434578
         )
 
         val stds = mapOf(
-            "url_length" to 20.1829, "valid_url" to 0.4491, "at_symbol" to 0.2446,
-            "sensitive_words_count" to 0.4464, "path_length" to 18.8541, "isHttps" to 0.4947,
-            "nb_dots" to 2.4244, "nb_hyphens" to 1.2514, "nb_and" to 0.1259, "nb_or" to 0.4291,
-            "nb_www" to 0.4346, "nb_com" to 0.5373, "nb_underscore" to 0.5024
+            "url_length" to 38.075073, "domain_length" to 9.152028, "is_ip" to 0.050065,
+            "tld_length" to 0.610355, "subdomain_count" to 0.603639, "is_https" to 0.414211,
+            "letters" to 26.179327, "letter_ratio" to 0.074458, "digits" to 11.096091,
+            "digit_ratio" to 0.070273, "special" to 4.627194, "special_ratio" to 0.041237,
+            "equals_count" to 0.871292, "qmark_count" to 0.192679, "amp_count" to 0.480465,
+            "hyphen_count" to 1.414151, "dots_count" to 0.902442, "slash_count" to 1.041225
         )
 
         val weights = mapOf(
-            "url_length" to 0.802, "valid_url" to 1.6832, "at_symbol" to -0.1313,
-            "sensitive_words_count" to 0.2354, "path_length" to -0.6387, "isHttps" to 0.4263,
-            "nb_dots" to -0.0477, "nb_hyphens" to 0.0966, "nb_and" to -0.0835, "nb_or" to -0.1758,
-            "nb_www" to -0.6384, "nb_com" to 0.109, "nb_underscore" to -0.2232
+            "url_length" to 1.251979, "domain_length" to 1.795856, "is_ip" to -0.215088,
+            "tld_length" to -0.117955, "subdomain_count" to -0.913558, "is_https" to -6.02676,
+            "letters" to 1.343679, "letter_ratio" to -0.983114, "digits" to 0.182808,
+            "digit_ratio" to 0.766319, "special" to 2.261443, "special_ratio" to 0.469199,
+            "equals_count" to -0.195417, "qmark_count" to 0.220252, "amp_count" to -0.319486,
+            "hyphen_count" to -0.355087, "dots_count" to -0.030637, "slash_count" to 11.014
         )
-        val bias = 0.3105
+        val bias = 4.843679
 
         // Predict Z-score
         var z = bias
         val features = mapOf(
-            "url_length" to urlLength.toDouble(), "valid_url" to isValid.toDouble(), "at_symbol" to atSymbol.toDouble(),
-            "sensitive_words_count" to sensitiveWordsCount.toDouble(), "path_length" to pathLength.toDouble(), "isHttps" to isHttps.toDouble(),
-            "nb_dots" to nbDots.toDouble(), "nb_hyphens" to nbHyphens.toDouble(), "nb_and" to nbAnd.toDouble(), "nb_or" to nbOr.toDouble(),
-            "nb_www" to nbWww.toDouble(), "nb_com" to nbCom.toDouble(), "nb_underscore" to nbUnderscore.toDouble()
+            "url_length" to urlLength.toDouble(), "domain_length" to domainLength.toDouble(), "is_ip" to isIp,
+            "tld_length" to tldLength, "subdomain_count" to subdomainCount, "is_https" to isHttpsVal,
+            "letters" to letters.toDouble(), "letter_ratio" to letterRatio, "digits" to digits.toDouble(),
+            "digit_ratio" to digitRatio, "special" to special.toDouble(), "special_ratio" to specialRatio,
+            "equals_count" to equalsCount, "qmark_count" to qmarkCount, "amp_count" to ampCount,
+            "hyphen_count" to hyphenCount, "dots_count" to dotsCount, "slash_count" to slashCount
         )
 
         for ((feat, value) in features) {

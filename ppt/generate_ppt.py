@@ -88,7 +88,7 @@ def create_presentation():
     
     # Main Title
     p_title = tf.paragraphs[0]
-    p_title.text = "PHISHGUARD"
+    p_title.text = "SECURE OS"
     p_title.font.name = "Trebuchet MS"
     p_title.font.size = Pt(64)
     p_title.font.bold = True
@@ -97,7 +97,7 @@ def create_presentation():
     
     # Subtitle
     p_sub = tf.add_paragraph()
-    p_sub.text = "A Hybrid Client-Server System for Real-Time Phishing & Cyber Crime Mitigation"
+    p_sub.text = "Stopping Phishing and Cyber Scams in Real Time—Before You Click"
     p_sub.font.name = "Calibri"
     p_sub.font.size = Pt(22)
     p_sub.font.color.rgb = ACCENT_GREEN
@@ -105,14 +105,14 @@ def create_presentation():
     
     # Team Details
     p_team = tf.add_paragraph()
-    p_team.text = "Team Name: PhishGuard Solutions"
+    p_team.text = "Team Name: Secure OS Solutions"
     p_team.font.name = "Calibri"
     p_team.font.size = Pt(18)
     p_team.font.bold = True
     p_team.font.color.rgb = WHITE
     
     p_members = tf.add_paragraph()
-    p_members.text = "Team Members: [Member 1 (Developer), Member 2 (Designer/Researcher), Member 3]"
+    p_members.text = "Team Members: Anmol Malviya (Leader), Sachin Yaduwanshi, Saanvi Gupta, Tanay Agrawal, Shailendra Singh"
     p_members.font.name = "Calibri"
     p_members.font.size = Pt(15)
     p_members.font.color.rgb = TEXT_LIGHT
@@ -122,7 +122,7 @@ def create_presentation():
     # ----------------------------------------------------
     slide = prs.slides.add_slide(slide_layout)
     set_slide_background(slide, LIGHT_BG)
-    add_slide_header(slide, "The Rising Cyber Crime Threat")
+    add_slide_header(slide, "The Cybersecurity Crisis We Face")
     
     # Left Column: Problem description
     left_col = slide.shapes.add_textbox(Inches(0.75), Inches(1.5), Inches(5.5), Inches(5.0))
@@ -131,7 +131,7 @@ def create_presentation():
     tf_left.margin_left = tf_left.margin_top = tf_left.margin_right = tf_left.margin_bottom = 0
     
     p_prob_hdr = tf_left.paragraphs[0]
-    p_prob_hdr.text = "The Phishing & Social Engineering Crisis"
+    p_prob_hdr.text = "Why Traditional Security Fails Us"
     p_prob_hdr.font.name = "Trebuchet MS"
     p_prob_hdr.font.size = Pt(22)
     p_prob_hdr.font.bold = True
@@ -139,10 +139,10 @@ def create_presentation():
     p_prob_hdr.space_after = Pt(15)
     
     bullet_points = [
-        "Phishing accounts for over 80% of all reported security incidents worldwide, leading to massive financial and identity thefts.",
-        "Zero-Day Domains: Cyber criminals deploy highly target-specific web links that stay active for less than 24 hours to bypass traditional blacklists (e.g., Google Safe Browsing).",
-        "Quishing (QR Code Phishing): Physical flyers and QR codes are increasingly weaponized to redirect users to malicious login clones invisibly.",
-        "Brand Impersonation: Sophisticated tricks like IDN Homograph attacks (fake letters mimicking real ones) fool even tech-savvy citizens."
+        "Over 80% of cyberattacks start with a simple phishing link, costing people their hard-earned money and identities.",
+        "Scam websites pop up and vanish in under 24 hours, completely bypassing standard browser blocklists.",
+        "QR code scams ('Quishing') are on the rise, tricking users into scanning malicious links in public spaces.",
+        "Fake characters (like Cyrillic look-alikes) make fraudulent links look identical to trusted brands."
     ]
     for pt in bullet_points:
         p = tf_left.add_paragraph()
@@ -168,7 +168,7 @@ def create_presentation():
     tf_right.margin_left = tf_right.margin_top = tf_right.margin_right = tf_right.margin_bottom = 0
     
     p_stat_title = tf_right.paragraphs[0]
-    p_stat_title.text = "CRITICAL GAP IN CITIZEN SECURITY"
+    p_stat_title.text = "THE DANGEROUS SECURITY GAP"
     p_stat_title.font.name = "Trebuchet MS"
     p_stat_title.font.size = Pt(18)
     p_stat_title.font.bold = True
@@ -176,9 +176,9 @@ def create_presentation():
     p_stat_title.space_after = Pt(14)
     
     gaps = [
-        "Inability of citizens to check suspicious links dynamically without visiting them.",
-        "Emails look perfectly spoofed; email headers contain the proof (SPF/DKIM/DMARC) but are unreadable to regular users.",
-        "Mobile security applications are often heavy, resource-intensive, and depend entirely on continuous cloud connections."
+        "Regular citizens have no safe way to inspect a link before clicking it.",
+        "Email headers hold the key to spotting spoofs, but they are completely unreadable to the average person.",
+        "Existing mobile security apps drain your battery and won't work without internet."
     ]
     for gap in gaps:
         p = tf_right.add_paragraph()
@@ -194,12 +194,12 @@ def create_presentation():
     # ----------------------------------------------------
     slide = prs.slides.add_slide(slide_layout)
     set_slide_background(slide, LIGHT_BG)
-    add_slide_header(slide, "Proposed Solution: PhishGuard")
+    add_slide_header(slide, "Meet Secure OS: Your Digital Shield")
     
     # Intro Subtitle
     intro_box = slide.shapes.add_textbox(Inches(0.75), Inches(1.3), Inches(11.833), Inches(0.6))
     p_intro = intro_box.text_frame.paragraphs[0]
-    p_intro.text = "An intelligent, multi-layered anti-phishing ecosystem uniting local mobile AI with cloud-driven analysis."
+    p_intro.text = "A smart, multi-layered defense system that stops scams on your phone and in the cloud."
     p_intro.font.name = "Calibri"
     p_intro.font.size = Pt(18)
     p_intro.font.italic = True
@@ -208,22 +208,22 @@ def create_presentation():
     # 3 Pillars (Shapes/Cards)
     pillar_data = [
         {
-            "title": "1. Local Mobile Engine",
-            "desc": "A native Android app featuring an offline Machine Learning classifier (Logistic Regression) + heuristic scans to check links with zero latency and high battery efficiency.",
+            "title": "1. Instant Mobile Protection",
+            "desc": "A lightweight, offline AI running on your phone to scan links instantly with zero delay—saving your battery and working without internet.",
             "color": RGBColor(239, 246, 255), # light blue
             "border": PRIMARY_BLUE,
             "x": 0.75
         },
         {
-            "title": "2. Server-Side Deep Scan",
-            "desc": "A Node.js backend checking active DNS registration, validating SSL chains (detecting self-signed/expired certs), and auditing the page HTML layout for password credential theft scripts.",
+            "title": "2. Cloud Deep-Scan API",
+            "desc": "An advanced server that digs deeper—verifying website domains, checking SSL certificates, and inspecting page code for hidden credential thieves.",
             "color": RGBColor(240, 253, 250), # light teal
             "border": ACCENT_GREEN,
             "x": 4.85
         },
         {
-            "title": "3. Security Sandbox",
-            "desc": "An isolated, script-restricted preview sandbox that lets users view the visual layout of a suspicious website safely on their screens without executing any malicious payloads.",
+            "title": "3. Safe View Sandbox",
+            "desc": "A secure, isolated preview window that lets you look inside a website safely without downloading malware or trackers.",
             "color": RGBColor(255, 251, 235), # light yellow
             "border": RGBColor(217, 119, 6), # amber
             "x": 8.95
@@ -269,14 +269,14 @@ def create_presentation():
     # ----------------------------------------------------
     slide = prs.slides.add_slide(slide_layout)
     set_slide_background(slide, LIGHT_BG)
-    add_slide_header(slide, "How the Solution Works: Detection Pipeline")
+    add_slide_header(slide, "How It Works: Step-by-Step Defense")
     
     # Draw horizontal pipeline steps
     steps = [
-        {"num": "1", "name": "Input URL / QR / Email", "desc": "User enters URL, scans QR, or pastes raw email headers into PhishGuard."},
-        {"num": "2", "name": "Local Heuristics Run", "desc": "Android client inspects Punycode (homographs), Levenshtein distance (typosquatting), and entropy."},
-        {"num": "3", "name": "On-Device ML Predict", "desc": "Lightweight ML model runs locally to evaluate feature weights & output instant danger probability."},
-        {"num": "4", "name": "API Deep Analysis", "desc": "Backend makes asynchronous DNS queries, SSL certificate analysis, and scans page HTML for login portals."}
+        {"num": "1", "name": "Scan or Paste", "desc": "You copy a link, scan a physical QR code, or paste an email header."},
+        {"num": "2", "name": "Instant Text Check", "desc": "The app instantly looks for look-alike brand names, fake characters, and random letter patterns."},
+        {"num": "3", "name": "Offline AI Analysis", "desc": "A lightweight machine learning model runs right on your phone to give you an immediate safety score."},
+        {"num": "4", "name": "Deep Cloud Inspection", "desc": "If something looks off, our servers audit the website's registration details and inspect the code for scams."}
     ]
     
     for i, step in enumerate(steps):
@@ -336,18 +336,18 @@ def create_presentation():
     # ----------------------------------------------------
     slide = prs.slides.add_slide(slide_layout)
     set_slide_background(slide, LIGHT_BG)
-    add_slide_header(slide, "Major Components of PhishGuard")
+    add_slide_header(slide, "The Secure OS Ecosystem")
     
     # 2x2 grid style representation
     comps = [
-        ("Mobile App (Android / Kotlin Client)", 
-         "Fully native Android app offering real-time URL interception, local heuristic scores, and a built-in camera reader to securely parse QR codes without executing scripts."),
-        ("Dynamic Web Dashboard (Next.js PWA)", 
-         "A highly responsive web application built with React, styled in Vanilla CSS, that offers manual link checking, security guide walkthroughs, and a responsive portal."),
-        ("Deep Scan Node.js Backend API", 
-         "A security API performing low-level certificate checks (Issuer, valid timeframe, fingerprint signatures), live DNS lookups, and checking HTML tags for spoof scripts."),
-        ("Interactive Sandbox & Email Analyzer", 
-         "Includes (1) A clean Safe Sandbox rendering iframe views securely with iframe scripting completely disabled, and (2) An Email Header parser diagnosing spoofed senders.")
+        ("Native Android App", 
+         "Scans links automatically from your clipboard, decodes QR codes safely, and runs offline AI checks directly on your device with zero latency."),
+        ("Web Security Hub", 
+         "A beautiful Next.js dashboard to manually check suspicious links, view detailed scan histories, and learn cybersecurity basics."),
+        ("Deep-Scan Servers", 
+         "A powerful backend API that investigates domains, checks SSL certification validity, and analyzes page HTML structure."),
+        ("Safe View & Email Auditor", 
+         "Renders dangerous pages inside a script-disabled visual sandbox and breaks down confusing email headers into plain English.")
     ]
     
     for idx, (title, desc) in enumerate(comps):
@@ -400,7 +400,7 @@ def create_presentation():
     # ----------------------------------------------------
     slide = prs.slides.add_slide(slide_layout)
     set_slide_background(slide, LIGHT_BG)
-    add_slide_header(slide, "System Architecture & Tech Stack")
+    add_slide_header(slide, "Our Tech Stack & Core Algorithms")
     
     # Left Column: Technologies
     left_tb = slide.shapes.add_textbox(Inches(0.75), Inches(1.6), Inches(5.5), Inches(5.0))
@@ -409,7 +409,7 @@ def create_presentation():
     tf_left.margin_left = tf_left.margin_top = tf_left.margin_right = tf_left.margin_bottom = 0
     
     p_tech_hdr = tf_left.paragraphs[0]
-    p_tech_hdr.text = "Technology Stack"
+    p_tech_hdr.text = "The Technology Behind Secure OS"
     p_tech_hdr.font.name = "Trebuchet MS"
     p_tech_hdr.font.size = Pt(22)
     p_tech_hdr.font.bold = True
@@ -417,11 +417,11 @@ def create_presentation():
     p_tech_hdr.space_after = Pt(15)
     
     techs = [
-        ("Mobile Client", "Native Kotlin, Android SDK, Local Heuristics Logic"),
-        ("Frontend Web App", "Next.js 16 (React), Vanilla CSS, Tailwind CSS for dashboard structure"),
-        ("Backend Services", "Next.js API Routes (Node.js/V8 execution context)"),
-        ("Utilities & Scanner", "HTML5 QR-code parser, Web Cryptography API, DNS modules"),
-        ("Model Infrastructure", "Python script for dataset extraction (`download_dataset.py`) & weights translation (`phishing_model_weights.json`)")
+        ("Mobile App", "Native Kotlin, Android SDK, and offline heuristics"),
+        ("Web Dashboard", "Next.js 16 (React), Vanilla CSS with premium glassmorphism styles"),
+        ("Cloud API", "Next.js serverless API routes running on Node.js"),
+        ("Utilities", "HTML5 QR-code reader and secure Web Cryptography"),
+        ("Data Pipeline", "Python scripts for dataset processing and model weights translation")
     ]
     for label, desc in techs:
         p = tf_left.add_paragraph()
@@ -443,7 +443,7 @@ def create_presentation():
     tf_right.margin_left = tf_right.margin_top = tf_right.margin_right = tf_right.margin_bottom = 0
     
     p_algo_hdr = tf_right.paragraphs[0]
-    p_algo_hdr.text = "Algorithms & Core Security Models"
+    p_algo_hdr.text = "The Algorithms Keeping You Safe"
     p_algo_hdr.font.name = "Trebuchet MS"
     p_algo_hdr.font.size = Pt(22)
     p_algo_hdr.font.bold = True
@@ -451,10 +451,10 @@ def create_presentation():
     p_algo_hdr.space_after = Pt(15)
     
     algos = [
-        ("Levenshtein Distance Metric", "Calculates string similarity to stop spoofed domains mimicking top-brand sites (PayPal, Google)."),
-        ("Logistic Regression Probabilistic Model", "Processes URL length, special chars (@, _, -, .), subdomains, and protocols to evaluate a cumulative threat index."),
-        ("Shannon Entropy Calculation", "Detects algorithmically generated, randomized random domains often deployed in spam/bot nets."),
-        ("Punycode Decoding (`xn--`)", "Identifies IDN Homograph attacks where Cyrillic symbols hide within Latin domains to deceive end users.")
+        ("Typosquatting Checker (Levenshtein)", "Calculates text similarity to catch links mimicking popular brand names (like `paypa1.com`)."),
+        ("Threat Classifier (Logistic Regression)", "Analyzes structural features of a URL to calculate an instant probability score."),
+        ("Randomness Detector (Shannon Entropy)", "Detects randomly generated domains frequently used by botnets and automated spammers."),
+        ("Homograph Decoder (Punycode)", "Exposes scams using foreign characters that mimic standard English letters.")
     ]
     for name, desc in algos:
         p = tf_right.add_paragraph()
@@ -474,14 +474,14 @@ def create_presentation():
     # ----------------------------------------------------
     slide = prs.slides.add_slide(slide_layout)
     set_slide_background(slide, LIGHT_BG)
-    add_slide_header(slide, "Impact on Cybersecurity & Society")
+    add_slide_header(slide, "Making a Real-World Impact")
     
     # 4 grid blocks for impacts
     impacts = [
-        ("Prevention Over Reaction", "Blocks malicious URLs before the user ever accesses them. Traditional browsers warn users after a site is flagged in a database; PhishGuard analyzes site structure instantly to block on Day-Zero."),
-        ("Quishing (QR Phishing) Shield", "Protects citizens from physical scams. QR codes printed on fake parking slips or public posters are resolved locally, informing users of the underlying redirect risks before loading."),
-        ("Accessible Email Security", "Democratizes complex header verification. Instead of looking at unreadable headers, users get simple ratings on whether the sender email addresses match verified SPF/DKIM profiles."),
-        ("Education & Behavioral Shift", "Features gamified security guides and self-assessment quizzes that teach ordinary citizens how to identify phishing flags on their own, strengthening the human defense layer.")
+        ("Preventing Scams, Not Just Reporting Them", "While traditional browsers warn you after a site is already flagged, Secure OS analyzes site structure instantly to block brand-new (zero-day) attacks."),
+        ("The QR Code (Quishing) Shield", "Protects citizens from physical scams—like fake parking ticket stickers or public poster codes—by decoding links safely and previewing them first."),
+        ("Making Email Security Simple", "Takes the technical jargon out of email headers, showing a clear, understandable rating on whether the sender is authentic."),
+        ("Training the Human Layer", "Builds lasting digital safety habits using interactive, gamified quizzes to teach citizens how to spot phishing flags on their own.")
     ]
     
     for idx, (title, desc) in enumerate(impacts):
@@ -519,10 +519,11 @@ def create_presentation():
         p_d.font.color.rgb = TEXT_DARK
 
     # ----------------------------------------------------
-    # SLIDE 8: Demo & Conclusion (Dark Theme)
+    # SLIDE 8: Working Prototype & Live Demo (Light Theme with Image)
     # ----------------------------------------------------
     slide = prs.slides.add_slide(slide_layout)
-    set_slide_background(slide, DARK_NAVY)
+    set_slide_background(slide, LIGHT_BG)
+    add_slide_header(slide, "Our Live Working Prototype")
     
     # Left Column: Demo highlights
     left_tb = slide.shapes.add_textbox(Inches(0.75), Inches(1.8), Inches(6.0), Inches(4.5))
@@ -531,65 +532,88 @@ def create_presentation():
     tf_left.margin_left = tf_left.margin_top = tf_left.margin_right = tf_left.margin_bottom = 0
     
     p_demo_hdr = tf_left.paragraphs[0]
-    p_demo_hdr.text = "Working Prototype & Live Demo"
+    p_demo_hdr.text = "Experience Secure OS in Action"
     p_demo_hdr.font.name = "Trebuchet MS"
-    p_demo_hdr.font.size = Pt(26)
+    p_demo_hdr.font.size = Pt(22)
     p_demo_hdr.font.bold = True
-    p_demo_hdr.font.color.rgb = WHITE
+    p_demo_hdr.font.color.rgb = TEXT_DARK
     p_demo_hdr.space_after = Pt(20)
     
     demo_bullets = [
-        "Interactive URL Analyzer dashboard running at localhost:3000.",
-        "Live QR Scanning interface using webcam inputs (HTML5 integration).",
-        "Active Deep Scan API executing DNS resolutions and parsing HTML forms synchronously.",
-        "Fully modular Kotlin class (PhishingEngine.kt) verifying URL components in the Android app."
+        "Interactive Dashboard: A real-time web interface running at localhost:3000 to scan and preview links safely.",
+        "Live QR Scanner: Instant, webcam-integrated scanning to parse and analyze physical codes.",
+        "Cloud-Based Audits: A live backend that triggers DNS lookups and certificate validation on the fly.",
+        "Native Mobile Diagnostics: Offline Kotlin engine checking links on the go directly in the Android app."
     ]
     for db in demo_bullets:
         p = tf_left.add_paragraph()
         p.text = "⚡ " + db
         p.font.name = "Calibri"
-        p.font.size = Pt(16)
-        p.font.color.rgb = TEXT_LIGHT
+        p.font.size = Pt(15)
+        p.font.color.rgb = TEXT_DARK
         p.space_after = Pt(14)
 
-    # Right Column: Big Final Banner (Card)
-    right_card = slide.shapes.add_shape(
-        MSO_SHAPE.ROUNDED_RECTANGLE,
-        Inches(7.2), Inches(1.8), Inches(5.3), Inches(4.2)
+    # Right Column: App image
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    img_path = os.path.join(script_dir, "image.png")
+    if os.path.exists(img_path):
+        slide.shapes.add_picture(img_path, Inches(7.2), Inches(1.6), width=Inches(5.3))
+    else:
+        # Fallback card if the image is missing
+        right_card = slide.shapes.add_shape(
+            MSO_SHAPE.ROUNDED_RECTANGLE,
+            Inches(7.2), Inches(1.8), Inches(5.3), Inches(4.2)
+        )
+        right_card.fill.solid()
+        right_card.fill.fore_color.rgb = PRIMARY_BLUE
+        right_card.line.fill.background()
+
+    # ----------------------------------------------------
+    # SLIDE 9: Conclusion (Dark Theme)
+    # ----------------------------------------------------
+    slide = prs.slides.add_slide(slide_layout)
+    set_slide_background(slide, DARK_NAVY)
+    
+    # Add decorative colored shape
+    accent_box = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE,
+        Inches(0.75), Inches(2.2), Inches(0.12), Inches(3.2)
     )
-    right_card.fill.solid()
-    right_card.fill.fore_color.rgb = PRIMARY_BLUE
-    right_card.line.fill.background()
+    accent_box.fill.solid()
+    accent_box.fill.fore_color.rgb = PRIMARY_BLUE
+    accent_box.line.fill.background()
     
-    right_tb = slide.shapes.add_textbox(Inches(7.5), Inches(2.2), Inches(4.7), Inches(3.4))
-    tf_right = right_tb.text_frame
-    tf_right.word_wrap = True
-    tf_right.margin_left = tf_right.margin_top = tf_right.margin_right = tf_right.margin_bottom = 0
+    # Text Frame
+    text_box = slide.shapes.add_textbox(Inches(1.1), Inches(2.0), Inches(11.0), Inches(3.5))
+    tf = text_box.text_frame
+    tf.word_wrap = True
+    tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
     
-    p_end_title = tf_right.paragraphs[0]
-    p_end_title.text = "PHISHGUARD"
-    p_end_title.font.name = "Trebuchet MS"
-    p_end_title.font.size = Pt(36)
-    p_end_title.font.bold = True
-    p_end_title.font.color.rgb = WHITE
-    p_end_title.space_after = Pt(10)
+    p_title = tf.paragraphs[0]
+    p_title.text = "SECURE OS"
+    p_title.font.name = "Trebuchet MS"
+    p_title.font.size = Pt(64)
+    p_title.font.bold = True
+    p_title.font.color.rgb = WHITE
+    p_title.space_after = Pt(8)
     
-    p_end_sub = tf_right.add_paragraph()
-    p_end_sub.text = "Shielding Citizens from Cyber Scams"
-    p_end_sub.font.name = "Calibri"
-    p_end_sub.font.size = Pt(20)
-    p_end_sub.font.color.rgb = ACCENT_GREEN
-    p_end_sub.space_after = Pt(24)
+    p_sub = tf.add_paragraph()
+    p_sub.text = "Shielding Citizens from Cyber Scams"
+    p_sub.font.name = "Calibri"
+    p_sub.font.size = Pt(22)
+    p_sub.font.color.rgb = ACCENT_GREEN
+    p_sub.space_after = Pt(45)
     
-    p_ty = tf_right.add_paragraph()
-    p_ty.text = "Thank You! Questions?"
+    p_ty = tf.add_paragraph()
+    p_ty.text = "Thank You! Any Questions?"
     p_ty.font.name = "Trebuchet MS"
-    p_ty.font.size = Pt(22)
+    p_ty.font.size = Pt(28)
     p_ty.font.bold = True
     p_ty.font.color.rgb = WHITE
 
     # Save presentation
-    output_filename = "ppt/PhishGuard_Presentation.pptx"
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_filename = os.path.join(script_dir, "Secure_OS_Presentation.pptx")
     prs.save(output_filename)
     print(f"Presentation created successfully at {output_filename}!")
 
