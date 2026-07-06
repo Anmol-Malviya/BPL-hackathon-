@@ -18,7 +18,7 @@ export default function Header({ isOnline }) {
             </linearGradient>
           </defs>
         </svg>
-        <span className="app-title">PhishGuard</span>
+        <span className="app-title">Secure OS</span>
       </div>
       {isOnline ? (
         <span className="online-badge">⚡ Live</span>

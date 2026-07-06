@@ -48,7 +48,7 @@ const QUIZ_QUESTIONS = [
     options: [
       "Trust it because it looks clean and short.",
       "Click it immediately to see where it goes.",
-      "Scan it with a verification app (like PhishGuard) before entering credentials.",
+      "Scan it with a verification app (like Secure OS) before entering credentials.",
       "Assume all shortened links are virus-free.",
     ],
     correct: 2,

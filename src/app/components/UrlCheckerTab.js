@@ -125,13 +125,13 @@ export default function UrlCheckerTab({
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <span style={{ fontSize: "26px" }}>🤖</span>
             <div>
-              <h4 style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "2px" }}>PhishGuard for Android</h4>
+              <h4 style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "2px" }}>Secure OS for Android</h4>
               <p style={{ fontSize: "11px", color: "var(--text-secondary)", lineHeight: "1.4" }}>Get real-time offline protection, clipboard checks, and secure QR scanning on your mobile device.</p>
             </div>
           </div>
           <a
             href="/app-debug.apk"
-            download="PhishGuard_v1.0.apk"
+            download="SecureOS_v1.0.apk"
             className="btn btn-secondary btn-full"
             style={{ minHeight: "36px", height: "36px", fontSize: "13px", color: "var(--color-secondary)", borderColor: "rgba(6, 182, 212, 0.3)", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}
           >

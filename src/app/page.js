@@ -18,6 +18,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("check");
   const [urlInput, setUrlInput] = useState("");
   const [isOnline, setIsOnline] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [scanHistory, setScanHistory] = useState([]);
   const [historyFilter, setHistoryFilter] = useState("ALL");
@@ -305,7 +306,8 @@ export default function Home() {
               </linearGradient>
             </defs>
           </svg>
-          <span className="landing-title">PhishGuard</span>
+          <span className="landing-title">Secure OS</span>
+          <span className={`status-dot-mobile ${isOnline ? "live" : "offline"}`} title={isOnline ? "Live scan mode" : "Offline mode"}></span>
         </div>
         <div className="landing-header-links hide-on-mobile">
           <a onClick={() => document.getElementById("features").scrollIntoView({ behavior: "smooth" })} className="landing-header-link">Features</a>
@@ -313,15 +315,54 @@ export default function Home() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           {isOnline ? (
-            <span className="online-badge" style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.25)" }}>⚡ Live Scan</span>
+            <span className="online-badge hide-on-mobile-inline" style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.25)" }}>⚡ Live Scan</span>
           ) : (
-            <span className="offline-badge" style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "12px", border: "1px solid rgba(239, 68, 68, 0.25)" }}>📴 Local</span>
+            <span className="offline-badge hide-on-mobile-inline" style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "12px", border: "1px solid rgba(239, 68, 68, 0.25)" }}>📴 Local</span>
           )}
-          <a href="/app-debug.apk" download="PhishGuard_v1.0.apk" className="btn btn-primary" style={{ minHeight: "38px", height: "38px", padding: "0 16px", fontSize: "13px", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            📥 Download App
+          <a href="/app-debug.apk" download="SecureOS_v1.0.apk" className="btn btn-primary" style={{ minHeight: "38px", height: "38px", padding: "0 12px", fontSize: "13px", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+            <span>📥</span>
+            <span className="hide-on-mobile-inline">Download App</span>
           </a>
+          <button 
+            className="mobile-menu-toggle" 
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle Menu"
+          >
+            <span className={`hamburger-bar ${menuOpen ? "open" : ""}`}></span>
+            <span className={`hamburger-bar ${menuOpen ? "open" : ""}`}></span>
+            <span className={`hamburger-bar ${menuOpen ? "open" : ""}`}></span>
+          </button>
         </div>
       </header>
+
+      {/* ====== MOBILE NAV DRAWER ====== */}
+      <div className={`mobile-nav-drawer ${menuOpen ? "open" : ""}`}>
+        <a 
+          onClick={() => {
+            setMenuOpen(false);
+            document.getElementById("features").scrollIntoView({ behavior: "smooth" });
+          }} 
+          className="mobile-nav-link"
+        >
+          Features
+        </a>
+        <a 
+          onClick={() => {
+            setMenuOpen(false);
+            document.getElementById("demo-suite").scrollIntoView({ behavior: "smooth" });
+          }} 
+          className="mobile-nav-link"
+        >
+          Web Demo
+        </a>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", marginTop: "20px" }}>
+          {isOnline ? (
+            <span className="online-badge" style={{ fontSize: "12px", padding: "6px 14px", borderRadius: "14px", border: "1px solid rgba(16, 185, 129, 0.25)" }}>⚡ Security Live</span>
+          ) : (
+            <span className="offline-badge" style={{ fontSize: "12px", padding: "6px 14px", borderRadius: "14px", border: "1px solid rgba(239, 68, 68, 0.25)" }}>📴 Local Scanner Mode</span>
+          )}
+        </div>
+      </div>
 
       {/* ====== HERO CONTAINER ====== */}
       <section className="landing-hero-container">
@@ -329,10 +370,10 @@ export default function Home() {
           <span className="hero-tagline">🛡️ Anti-Phishing Ecosystem v2.0</span>
           <h1>Defend Against Cyber Threats <span>In Real-Time</span></h1>
           <p className="landing-hero-subtitle">
-            PhishGuard is a unified client-server security system. Download our lightweight native Android app to block zero-day scams offline, or try the interactive cloud scanning demo below.
+            Secure OS is a unified client-server security system. Download our lightweight native Android app to block zero-day scams offline, or try the interactive cloud scanning demo below.
           </p>
           <div className="landing-hero-ctas">
-            <a href="/app-debug.apk" download="PhishGuard_v1.0.apk" className="btn btn-primary" style={{ padding: "0 28px", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <a href="/app-debug.apk" download="SecureOS_v1.0.apk" className="btn btn-primary" style={{ padding: "0 28px", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
               🤖 Download Android Client (APK)
             </a>
             <button onClick={() => document.getElementById("demo-suite").scrollIntoView({ behavior: "smooth" })} className="btn btn-secondary">
@@ -479,7 +520,7 @@ export default function Home() {
       {/* ====== FOOTER ====== */}
       <footer className="landing-footer">
         <p>Developed for <span>Bhopal Hackathon 2026</span></p>
-        <p>© 2026 PhishGuard. Empowering users with advanced offline & online threat mitigation.</p>
+        <p>© 2026 Secure OS. Empowering users with advanced offline & online threat mitigation.</p>
       </footer>
 
       {/* ====== SAFE SANDBOX MODAL ====== */}

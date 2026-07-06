@@ -20,7 +20,7 @@ export default function Sidebar({ activeTab, setActiveTab, threatStats, navItems
             </linearGradient>
           </defs>
         </svg>
-        <span className="sidebar-title">PhishGuard</span>
+        <span className="sidebar-title">Secure OS</span>
       </div>
 
       {/* Threat Stats */}

@@ -1,6 +1,6 @@
 {
-  "name": "PhishGuard QR & Link Scanner",
-  "short_name": "PhishGuard",
+  "name": "Secure OS QR & Link Scanner",
+  "short_name": "Secure OS",
   "description": "Scan QR codes and links on your mobile phone to check for phishing scams instantly, even offline.",
   "start_url": "/",
   "display": "standalone",

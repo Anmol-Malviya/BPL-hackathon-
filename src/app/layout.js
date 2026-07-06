@@ -13,13 +13,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "PhishGuard | QR & Phishing Link Scanner",
+  title: "Secure OS | QR & Phishing Link Scanner",
   description: "Mobile-first scanner to check links and QR codes for phishing attempts instantly, offline-ready.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "PhishGuard",
+    title: "Secure OS",
   },
   formatDetection: {
     telephone: false,
