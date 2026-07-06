@@ -112,16 +112,37 @@ export default function QrScanner({ onScanSuccess, onScanError }) {
     if (isScanning) {
       stopScanning();
     } else {
-      startScanning(selectedCameraId);
+      let camId = selectedCameraId;
+      if (!camId && cameras.length > 0) {
+        const backCamera = cameras.find((device) =>
+          device.label.toLowerCase().includes("back") ||
+          device.label.toLowerCase().includes("environment")
+        );
+        camId = backCamera ? backCamera.id : cameras[0].id;
+        setSelectedCameraId(camId);
+      }
+      startScanning(camId);
     }
   };
 
-  const handleCameraChange = (e) => {
-    const id = e.target.value;
-    setSelectedCameraId(id);
+  const handleFlipCamera = () => {
+    if (cameras.length <= 1) return;
+    const currentIndex = cameras.findIndex((c) => c.id === selectedCameraId);
+    const nextIndex = (currentIndex + 1) % cameras.length;
+    const nextCameraId = cameras[nextIndex].id;
+    setSelectedCameraId(nextCameraId);
     if (isScanning) {
-      startScanning(id);
+      startScanning(nextCameraId);
     }
+  };
+
+  const getActiveCameraLabel = () => {
+    const activeCam = cameras.find((c) => c.id === selectedCameraId);
+    if (!activeCam) return "Live Scanner";
+    const label = activeCam.label.toLowerCase();
+    if (label.includes("back") || label.includes("environment") || label.includes("rear")) return "Rear Camera";
+    if (label.includes("front") || label.includes("user")) return "Front Camera";
+    return activeCam.label || `Camera ${cameras.indexOf(activeCam) + 1}`;
   };
 
   // Handle file upload scanning
@@ -160,13 +181,34 @@ export default function QrScanner({ onScanSuccess, onScanError }) {
       <div className="scanner-container">
         {!isScanning && (
           <div className="scanner-placeholder">
-            <div className="placeholder-icon">📷</div>
-            <p>Ready to Scan QR Codes</p>
+            <div className="placeholder-glow"></div>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="placeholder-svg">
+              <path d="M4 8V6C4 4.89543 4.89543 4 6 4H8" stroke="url(#primaryGrad)" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M20 8V6C20 4.89543 19.1046 4 18 4H16" stroke="url(#primaryGrad)" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M4 16V18C4 19.1046 4.89543 20 6 20H8" stroke="url(#primaryGrad)" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M20 16V18C20 19.1046 19.1046 20 18 20H16" stroke="url(#primaryGrad)" strokeWidth="2.5" strokeLinecap="round"/>
+              <rect x="7" y="7" width="10" height="10" rx="2" stroke="#fff" strokeWidth="2" strokeDasharray="3 3"/>
+              <path d="M10 12H14M12 10V14" stroke="var(--color-secondary)" strokeWidth="2" strokeLinecap="round"/>
+              <defs>
+                <linearGradient id="primaryGrad" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="var(--color-primary)"/>
+                  <stop offset="1" stopColor="var(--color-secondary)"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div className="placeholder-text-group">
+              <h3>QR Scanner</h3>
+              <p>Scan safe links instantly using your camera</p>
+            </div>
             <button 
               onClick={handleToggleScan}
-              className="btn btn-primary"
+              className="btn btn-primary btn-scan-start"
               disabled={hasCameraPermission === false && !errorMsg}
             >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="btn-icon">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
               Start Camera Scan
             </button>
           </div>
@@ -187,32 +229,44 @@ export default function QrScanner({ onScanSuccess, onScanError }) {
             <div className="scanner-corner bottom-right"></div>
           </div>
         )}
-      </div>
 
-      {/* Camera selection and controls */}
-      {isScanning && (
-        <div className="scanner-controls">
-          <div className="select-container">
-            <label htmlFor="camera-select">Select Camera:</label>
-            <select
-              id="camera-select"
-              value={selectedCameraId}
-              onChange={handleCameraChange}
-              className="select-field"
-            >
-              {cameras.map((camera) => (
-                <option key={camera.id} value={camera.id}>
-                  {camera.label || `Camera ${cameras.indexOf(camera) + 1}`}
-                </option>
-              ))}
-            </select>
+        {/* Floating live status overlay */}
+        {isScanning && (
+          <div className="scanner-status-overlay">
+            <span className="scanner-status-dot"></span>
+            <span className="scanner-status-text">
+              {getActiveCameraLabel()}
+            </span>
           </div>
+        )}
 
-          <button onClick={stopScanning} className="btn btn-danger">
-            Stop Camera
-          </button>
-        </div>
-      )}
+        {/* Floating controls inside viewport */}
+        {isScanning && (
+          <div className="scanner-actions-overlay">
+            <button 
+              onClick={stopScanning} 
+              className="action-circle-btn stop-btn"
+              title="Stop Scanning"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
+              </svg>
+            </button>
+
+            {cameras.length > 1 && (
+              <button 
+                onClick={handleFlipCamera} 
+                className="action-circle-btn flip-btn"
+                title="Flip Camera"
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       {errorMsg && (
         <div className="error-message">
@@ -226,10 +280,24 @@ export default function QrScanner({ onScanSuccess, onScanError }) {
         <div className="divider">
           <span>OR</span>
         </div>
-        <p className="section-subtitle">Upload an image of a QR code from your gallery</p>
-        <button onClick={triggerFileInput} className="btn btn-secondary btn-full">
-          📂 Choose from Gallery / Files
-        </button>
+        
+        <div 
+          onClick={triggerFileInput} 
+          className="upload-dropzone glass-card"
+        >
+          <div className="upload-icon-container">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="upload-svg">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <div className="upload-text-content">
+            <p className="upload-main-text">Upload QR Code Image</p>
+            <p className="upload-sub-text">Drag & drop or tap to browse library</p>
+          </div>
+        </div>
+
         <input
           type="file"
           ref={fileInputRef}
