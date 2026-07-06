@@ -218,32 +218,68 @@ object PhishingEngine {
 
         // ML normalization parameters (from phishing_model_weights.json)
         val means = mapOf(
-            "url_length" to 35.297006, "domain_length" to 21.475954, "is_ip" to 0.002513,
-            "tld_length" to 2.756717, "subdomain_count" to 1.161035, "is_https" to 0.780053,
-            "letters" to 27.151864, "letter_ratio" to 0.777298, "digits" to 1.871933,
-            "digit_ratio" to 0.028374, "special" to 6.273209, "special_ratio" to 0.194328,
-            "equals_count" to 0.062803, "qmark_count" to 0.029379, "amp_count" to 0.036547,
-            "hyphen_count" to 0.35014, "dots_count" to 2.257734, "slash_count" to 2.434578
+            "url_length" to 62.64702,
+            "domain_length" to 20.65147,
+            "is_ip" to 0.00527,
+            "tld_length" to 2.82428,
+            "subdomain_count" to 0.75429,
+            "is_https" to 0.457375,
+            "letters" to 46.24318,
+            "letter_ratio" to 0.769156,
+            "digits" to 7.64757,
+            "digit_ratio" to 0.073534,
+            "special" to 8.75627,
+            "special_ratio" to 0.157309,
+            "equals_count" to 0.32242,
+            "qmark_count" to 0.1569,
+            "amp_count" to 0.14655,
+            "hyphen_count" to 1.27194,
+            "dots_count" to 2.25694,
+            "slash_count" to 3.195345
         )
 
         val stds = mapOf(
-            "url_length" to 38.075073, "domain_length" to 9.152028, "is_ip" to 0.050065,
-            "tld_length" to 0.610355, "subdomain_count" to 0.603639, "is_https" to 0.414211,
-            "letters" to 26.179327, "letter_ratio" to 0.074458, "digits" to 11.096091,
-            "digit_ratio" to 0.070273, "special" to 4.627194, "special_ratio" to 0.041237,
-            "equals_count" to 0.871292, "qmark_count" to 0.192679, "amp_count" to 0.480465,
-            "hyphen_count" to 1.414151, "dots_count" to 0.902442, "slash_count" to 1.041225
+            "url_length" to 81.563023,
+            "domain_length" to 12.021806,
+            "is_ip" to 0.072403,
+            "tld_length" to 0.623532,
+            "subdomain_count" to 1.004871,
+            "is_https" to 0.49818,
+            "letters" to 56.563279,
+            "letter_ratio" to 0.103042,
+            "digits" to 22.51204,
+            "digit_ratio" to 0.104149,
+            "special" to 10.015636,
+            "special_ratio" to 0.046629,
+            "equals_count" to 1.196225,
+            "qmark_count" to 0.420919,
+            "amp_count" to 0.811753,
+            "hyphen_count" to 2.579973,
+            "dots_count" to 2.527978,
+            "slash_count" to 2.837436
         )
 
         val weights = mapOf(
-            "url_length" to 1.251979, "domain_length" to 1.795856, "is_ip" to -0.215088,
-            "tld_length" to -0.117955, "subdomain_count" to -0.913558, "is_https" to -6.02676,
-            "letters" to 1.343679, "letter_ratio" to -0.983114, "digits" to 0.182808,
-            "digit_ratio" to 0.766319, "special" to 2.261443, "special_ratio" to 0.469199,
-            "equals_count" to -0.195417, "qmark_count" to 0.220252, "amp_count" to -0.319486,
-            "hyphen_count" to -0.355087, "dots_count" to -0.030637, "slash_count" to 11.014
+            "url_length" to 0.246727,
+            "domain_length" to 1.290708,
+            "is_ip" to 0.30906,
+            "tld_length" to -0.060252,
+            "subdomain_count" to -0.601058,
+            "is_https" to 0.718823,
+            "letters" to 0.528222,
+            "letter_ratio" to -0.295592,
+            "digits" to -0.020908,
+            "digit_ratio" to 0.123457,
+            "special" to -0.926901,
+            "special_ratio" to 0.377459,
+            "equals_count" to 0.263368,
+            "qmark_count" to -0.188277,
+            "amp_count" to -0.083359,
+            "hyphen_count" to -0.52866,
+            "dots_count" to 0.158269,
+            "slash_count" to 1.370667
         )
-        val bias = 4.843679
+        val bias = 0.086256
 
         // Predict Z-score
         var z = bias
@@ -279,9 +315,8 @@ object PhishingEngine {
         }
 
         // Heuristics 2: IP Address in Hostname
-        val ipPattern = Pattern.compile("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")
-        val isIp = ipPattern.matcher(hostname).matches()
-        if (isIp) {
+        val isIpAddress = isIp == 1.0
+        if (isIpAddress) {
             warnings.add("• IP Domain: Uses raw numerical IP address instead of domain name.")
             riskScore += 35
         }
@@ -294,7 +329,7 @@ object PhishingEngine {
         }
 
         // Heuristics 4: Typosquatting & Brand Spoofing
-        if (!isIp && hostname.isNotEmpty()) {
+        if (!isIpAddress && hostname.isNotEmpty()) {
             val primaryName = extractPrimaryDomainName(hostname)
             var typosquatTarget: String? = null
             var brandAbuse = false
@@ -335,13 +370,18 @@ object PhishingEngine {
         }
 
         // Heuristics 5: Sensitive Words Abuse
+        var sensitiveWordsCount = 0
+        val lowerUrl = rawUrl.lowercase()
+        for (word in SENSITIVE_WORDS) {
+            sensitiveWordsCount += countOccurrences(lowerUrl, word)
+        }
         if (sensitiveWordsCount > 0) {
             warnings.add("• Deceptive Keywords: URL paths use security/urgency words to trick you.")
             riskScore += 15
         }
 
         // Heuristics 6: Entropy (Random auto-generated names)
-        if (!isIp && hostname.isNotEmpty()) {
+        if (!isIpAddress && hostname.isNotEmpty()) {
             val primaryName = extractPrimaryDomainName(hostname)
             val entropy = calculateShannonEntropy(primaryName)
             if (primaryName.length > 8 && entropy > 4.1) {
@@ -351,7 +391,7 @@ object PhishingEngine {
         }
 
         // Heuristics 7: Dots count (Excess subdomains)
-        if (nbDots > 4) {
+        if (dotsCount > 4.0) {
             warnings.add("• Excessive Subdomains: Domain stacks nested parts to mask target.")
             riskScore += 15
         }
@@ -370,7 +410,7 @@ object PhishingEngine {
         }
 
         // Heuristics 10: Suspicious TLD
-        if (hostname.isNotEmpty() && !isIp) {
+        if (hostname.isNotEmpty() && !isIpAddress) {
             val tld = hostname.split(".").last()
             if (SUSPICIOUS_TLDS.contains(tld)) {
                 warnings.add("• High-Risk Domain TLD: The extension '.$tld' is statistically associated with malware and spam.")

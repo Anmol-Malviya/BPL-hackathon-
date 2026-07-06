@@ -65,27 +65,45 @@ export default function Home() {
       window.addEventListener("online", handleOnline);
       window.addEventListener("offline", handleOffline);
 
-      const savedHistory = localStorage.getItem("phishguard_history");
-      if (savedHistory) {
-        setScanHistory(JSON.parse(savedHistory));
-      } else {
-        const mockHistory = [
-          {
-            url: "https://www.google.com",
-            rating: "SAFE",
-            score: 100,
-            date: new Date(Date.now() - 3600000 * 2).toLocaleDateString(),
-          },
-          {
-            url: "http://secure-paypal-login.com/update",
-            rating: "DANGEROUS",
-            score: 15,
-            date: new Date(Date.now() - 3600000 * 24).toLocaleDateString(),
-          },
-        ];
-        setScanHistory(mockHistory);
-        localStorage.setItem("phishguard_history", JSON.stringify(mockHistory));
-      }
+      const loadHistory = async () => {
+        try {
+          if (navigator.onLine) {
+            const res = await fetch("/api/history");
+            if (res.ok) {
+              const data = await res.json();
+              setScanHistory(data);
+              localStorage.setItem("phishguard_history", JSON.stringify(data));
+              return;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to load history from database:", e);
+        }
+
+        const savedHistory = localStorage.getItem("phishguard_history");
+        if (savedHistory) {
+          setScanHistory(JSON.parse(savedHistory));
+        } else {
+          const mockHistory = [
+            {
+              url: "https://www.google.com",
+              rating: "SAFE",
+              score: 100,
+              date: new Date(Date.now() - 3600000 * 2).toLocaleDateString(),
+            },
+            {
+              url: "http://secure-paypal-login.com/update",
+              rating: "DANGEROUS",
+              score: 15,
+              date: new Date(Date.now() - 3600000 * 24).toLocaleDateString(),
+            },
+          ];
+          setScanHistory(mockHistory);
+          localStorage.setItem("phishguard_history", JSON.stringify(mockHistory));
+        }
+      };
+
+      loadHistory();
 
       return () => {
         window.removeEventListener("online", handleOnline);
@@ -243,6 +261,14 @@ export default function Home() {
       date: new Date().toLocaleDateString(),
     };
 
+    if (isOnline) {
+      fetch("/api/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newHistoryItem),
+      }).catch((e) => console.error("Failed to save to database:", e));
+    }
+
     setScanHistory((prevHistory) => {
       const filtered = prevHistory.filter(
         (item) => item.url.toLowerCase() !== finalResult.url.toLowerCase()
@@ -279,6 +305,10 @@ export default function Home() {
   const handleClearHistory = () => {
     setScanHistory([]);
     localStorage.removeItem("phishguard_history");
+    if (isOnline) {
+      fetch("/api/history", { method: "DELETE" })
+        .catch((e) => console.error("Failed to clear database history:", e));
+    }
   };
 
   const getRatingColorClass = (rating) => {
