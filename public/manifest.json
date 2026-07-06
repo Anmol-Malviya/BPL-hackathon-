@@ -1,0 +1,30 @@
+{
+  "name": "PhishGuard QR & Link Scanner",
+  "short_name": "PhishGuard",
+  "description": "Scan QR codes and links on your mobile phone to check for phishing scams instantly, even offline.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0b21",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
