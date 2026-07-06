@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    
+    <color name="bg_dark">#050310</color>
+    <color name="bg_card">#0c0920</color>
+    <color name="primary">#8b5cf6</color>
+    <color name="primary_dark">#5b21b6</color>
+    <color name="secondary">#06b6d4</color>
+    
+    <color name="danger">#ef4444</color>
+    <color name="danger_dim">#33ef4444</color>
+    <color name="text_primary">#f1f5f9</color>
+    <color name="text_secondary">#94a3b8</color>
+    <color name="text_muted">#475569</color>
+</resources>
