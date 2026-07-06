@@ -38,7 +38,7 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className="min-h-full flex flex-col bg-[#080614] text-[#ededed]">
+      <body className="min-h-full flex flex-col">
         <PwaRegister />
         {children}
       </body>
