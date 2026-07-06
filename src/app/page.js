@@ -508,14 +508,14 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* ====== MOBILE HEADER ====== */}
+      {/* ====== MOBILE HEADER (visible by default, hidden on desktop via CSS) ====== */}
       <header className="app-header">
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <svg style={{ width: "28px", height: "28px", filter: "drop-shadow(0 0 8px rgba(139,92,246,0.6))" }} viewBox="0 0 512 512" fill="none">
+        <div className="app-header-left">
+          <svg className="header-logo" viewBox="0 0 512 512" fill="none">
             <path d="M256 80 L380 135 C380 270 315 365 256 425 C197 365 132 270 132 135 Z"
-              fill="url(#shieldGradMob)" stroke="#8b5cf6" strokeWidth="8" />
+              fill="url(#hdrGrad)" stroke="#8b5cf6" strokeWidth="8" />
             <defs>
-              <linearGradient id="shieldGradMob" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id="hdrGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#a855f7" />
                 <stop offset="100%" stopColor="#06b6d4" />
               </linearGradient>
@@ -523,14 +523,13 @@ export default function Home() {
           </svg>
           <span className="app-title">PhishGuard</span>
         </div>
-        <div>
-          {isOnline ? (
-            <span className="online-badge">⚡ Live</span>
-          ) : (
-            <span className="offline-badge">📴 Offline</span>
-          )}
-        </div>
+        {isOnline ? (
+          <span className="online-badge">⚡ Live</span>
+        ) : (
+          <span className="offline-badge">📴 Offline</span>
+        )}
       </header>
+
 
       {/* ====== MAIN CONTENT ====== */}
       <main className="main-content">
@@ -1122,54 +1121,15 @@ export default function Home() {
         </div>
       </main>
 
-      {/* ====== MOBILE BOTTOM NAV ====== */}
+      {/* ====== BOTTOM NAV (always rendered, hidden via CSS on desktop) ====== */}
       <nav className="bottom-nav">
         {navItems.map(item => (
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "4px",
-              background: "none",
-              border: "none",
-              color: activeTab === item.id ? "var(--color-primary)" : "var(--text-muted)",
-              fontFamily: "var(--font-family)",
-              fontSize: "10px",
-              fontWeight: "600",
-              cursor: "pointer",
-              padding: "6px 8px",
-              transition: "all 0.2s ease",
-              position: "relative",
-            }}
+            className={`bottom-nav-btn ${activeTab === item.id ? "active" : ""}`}
           >
-            {activeTab === item.id && (
-              <span style={{
-                position: "absolute",
-                top: "-8px",
-                width: "20px",
-                height: "3px",
-                background: "linear-gradient(90deg, var(--color-primary), var(--color-secondary))",
-                borderRadius: "0 0 3px 3px",
-                boxShadow: "0 2px 8px var(--color-primary)",
-              }} />
-            )}
-            <span style={{
-              fontSize: "20px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "42px",
-              height: "28px",
-              borderRadius: "14px",
-              background: activeTab === item.id ? "rgba(139, 92, 246, 0.15)" : "transparent",
-              transition: "all 0.2s ease",
-              transform: activeTab === item.id ? "scale(1.15)" : "scale(1)",
-            }}>
-              {item.icon}
-            </span>
+            <span className="bottom-nav-icon">{item.icon}</span>
             {item.label.split(" ")[0]}
           </button>
         ))}
