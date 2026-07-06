@@ -1,6 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
+import { 
+  Mail, 
+  CheckCircle2, 
+  AlertTriangle, 
+  ShieldAlert, 
+  Check, 
+  ShieldCheck 
+} from "lucide-react";
 
 export default function EmailAnalyzerTab({
   emailHeadersInput,
@@ -21,7 +29,9 @@ export default function EmailAnalyzerTab({
       {/* Left Panel — Input */}
       <div className="panel-left">
         <div className="glass-card checker-box">
-          <span className="section-eyebrow">📨 Sender Authentication</span>
+          <span className="section-eyebrow" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <Mail size={10} className="text-purple-400" /> Sender Authentication
+          </span>
           <h2 className="panel-title">Email Header Analyzer</h2>
           <p className="hero-subtitle">
             Paste raw email headers to verify SPF, DKIM, and DMARC. Detect domain spoofing and forged senders.
@@ -41,9 +51,10 @@ export default function EmailAnalyzerTab({
             <button
               onClick={handleCheckEmailHeaders}
               className="btn btn-primary btn-full"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
               disabled={!emailHeadersInput.trim()}
             >
-              📧 Scan Sender Authentication
+              <Mail size={16} /> Scan Sender Authentication
             </button>
             {emailHeadersInput && (
               <button onClick={handleClearEmailInput} className="btn btn-secondary btn-full mt-2">
@@ -77,7 +88,14 @@ export default function EmailAnalyzerTab({
                 </div>
               </div>
 
-              <div className={`rating-badge ${getRatingColorClass(emailScanResult.rating)}`}>
+              <div className={`rating-badge ${getRatingColorClass(emailScanResult.rating)}`} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                {emailScanResult.rating === "SAFE" ? (
+                  <CheckCircle2 size={13} />
+                ) : emailScanResult.rating === "SUSPICIOUS" ? (
+                  <AlertTriangle size={13} />
+                ) : (
+                  <ShieldAlert size={13} />
+                )}
                 {emailScanResult.rating}
               </div>
 
@@ -125,7 +143,9 @@ export default function EmailAnalyzerTab({
 
               {emailScanResult.warnings.length > 0 && (
                 <div>
-                  <h3 className="detail-section-title">⚠️ Threat Factors ({emailScanResult.warnings.length})</h3>
+                  <h3 className="detail-section-title" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    <AlertTriangle size={14} className="text-amber-400" /> Threat Factors ({emailScanResult.warnings.length})
+                  </h3>
                   <div className="warning-list">
                     {emailScanResult.warnings.map((warning, idx) => (
                       <div key={idx} className={`warning-item severity-${warning.severity}`}>
@@ -142,13 +162,13 @@ export default function EmailAnalyzerTab({
 
               {emailScanResult.safeIndicators.length > 0 && (
                 <div>
-                  <h3 className="detail-section-title">
-                    <span className="safe-icon">✓</span> Security Controls Passed
+                  <h3 className="detail-section-title" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    <ShieldCheck size={14} className="text-emerald-400" /> Security Controls Passed
                   </h3>
                   <div className="safe-list">
                     {emailScanResult.safeIndicators.map((indicator, index) => (
-                      <div key={index} className="safe-item">
-                        <span className="safe-icon">✓</span>
+                      <div key={index} className="safe-item" style={{ display: "flex", alignItems: "center" }}>
+                        <Check size={12} className="text-emerald-400" style={{ marginRight: "8px", flexShrink: 0 }} />
                         <span>{indicator}</span>
                       </div>
                     ))}
@@ -159,13 +179,16 @@ export default function EmailAnalyzerTab({
           </div>
         ) : (
           <div className="glass-card result-placeholder">
-            <div className="shield-check-icon">📧</div>
+            <div className="shield-check-icon" style={{ display: "flex", justifyContent: "center" }}>
+              <Mail size={48} className="text-purple-400" />
+            </div>
             <h3
               style={{
                 fontSize: "18px",
                 fontWeight: "750",
                 color: "var(--text-secondary)",
                 marginBottom: "8px",
+                marginTop: "16px"
               }}
             >
               Awaiting Headers

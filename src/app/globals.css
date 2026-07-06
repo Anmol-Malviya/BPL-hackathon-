@@ -844,7 +844,7 @@ body::before {
   .result-header { padding: 28px 24px 22px; }
   .result-details { padding: 18px 22px 22px; }
   .btn { font-size: 14px; min-height: 44px; }
-  .hide-on-mobile { display: flex; }
+  .hide-on-mobile { display: flex !important; }
 }
 
 /* =============================================
@@ -923,7 +923,7 @@ body::before {
 .qr-file-spinner { width: 30px; height: 30px; border: 3px solid rgba(139,92,246,0.2); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
 
 /* hide-on-mobile: hidden by default, shown at desktop breakpoint */
-.hide-on-mobile { display: none; }
+.hide-on-mobile { display: none !important; }
 
 /* =============================================
    LANDING PAGE ADDITIONS — ULTRA PREMIUM DESIGN
@@ -1204,6 +1204,9 @@ body::before {
   padding: 0 16px;
 }
 .demo-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
@@ -1246,9 +1249,7 @@ body::before {
 
 /* Responsive Overrides */
 @media (max-width: 900px) {
-  .landing-header {
-    padding: 16px 20px;
-  }
+  /* Consolidated header styling at line 1307 */
   .landing-hero-container {
     grid-template-columns: 1fr;
     padding: 60px 20px 40px;
@@ -1307,6 +1308,7 @@ body::before {
   .landing-header {
     padding: 12px 18px;
     height: var(--header-h, 60px);
+    background: rgba(5, 3, 16, 0.98); /* Solid dark background to prevent overlap */
   }
   .landing-logo {
     width: 28px;
@@ -1439,5 +1441,14 @@ body::before {
 @media (min-width: 901px) {
   .mobile-nav-drawer {
     display: none;
+  }
+}
+
+/* =============================================
+   RESPONSIVE NAVBAR OVERRIDES FOR CASCADE FIX
+   ============================================= */
+@media (min-width: 900px) {
+  .hide-on-mobile {
+    display: flex !important;
   }
 }

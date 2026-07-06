@@ -2,6 +2,22 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { analyzeURL, analyzeEmailHeaders } from "../lib/phishingEngine";
+import { 
+  Search, 
+  Mail, 
+  Camera, 
+  History, 
+  GraduationCap, 
+  Shield, 
+  Download, 
+  Smartphone, 
+  Eye, 
+  Brain, 
+  Target, 
+  Box, 
+  Zap, 
+  WifiOff 
+} from "lucide-react";
 
 // Import modular components
 import Header from "./components/Header";
@@ -38,11 +54,11 @@ export default function Home() {
   // Threat navigation items
   const navItems = useMemo(
     () => [
-      { id: "check", icon: "🔍", label: "Check Link" },
-      { id: "email", icon: "📧", label: "Email Headers" },
-      { id: "qr", icon: "📷", label: "Scan QR" },
-      { id: "history", icon: "📜", label: "History" },
-      { id: "tips", icon: "🎓", label: "Security Guide" },
+      { id: "check", icon: <Search size={18} />, label: "Check Link" },
+      { id: "email", icon: <Mail size={18} />, label: "Email Headers" },
+      { id: "qr", icon: <Camera size={18} />, label: "Scan QR" },
+      { id: "history", icon: <History size={18} />, label: "History" },
+      { id: "tips", icon: <GraduationCap size={18} />, label: "Security Guide" },
     ],
     []
   );
@@ -322,20 +338,7 @@ export default function Home() {
       {/* ====== HEADER ====== */}
       <header className="landing-header">
         <div className="landing-logo-container">
-          <svg className="landing-logo" viewBox="0 0 512 512" fill="none">
-            <path
-              d="M256 80 L380 135 C380 270 315 365 256 425 C197 365 132 270 132 135 Z"
-              fill="url(#hdrGrad)"
-              stroke="#8b5cf6"
-              strokeWidth="8"
-            />
-            <defs>
-              <linearGradient id="hdrGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#a855f7" />
-                <stop offset="100%" stopColor="#06b6d4" />
-              </linearGradient>
-            </defs>
-          </svg>
+          <img className="landing-logo" src="/ic_app_logo.png" alt="Secure OS Logo" />
           <span className="landing-title">Secure OS</span>
           <span className={`status-dot-mobile ${isOnline ? "live" : "offline"}`} title={isOnline ? "Live scan mode" : "Offline mode"}></span>
         </div>
@@ -345,12 +348,16 @@ export default function Home() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           {isOnline ? (
-            <span className="online-badge hide-on-mobile-inline" style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.25)" }}>⚡ Live Scan</span>
+            <span className="online-badge hide-on-mobile-inline" style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.25)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+              <Zap size={11} /> Live Scan
+            </span>
           ) : (
-            <span className="offline-badge hide-on-mobile-inline" style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "12px", border: "1px solid rgba(239, 68, 68, 0.25)" }}>📴 Local</span>
+            <span className="offline-badge hide-on-mobile-inline" style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "12px", border: "1px solid rgba(239, 68, 68, 0.25)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+              <WifiOff size={11} /> Local
+            </span>
           )}
           <a href="/app-debug.apk" download="SecureOS_v1.0.apk" className="btn btn-primary" style={{ minHeight: "38px", height: "38px", padding: "0 12px", fontSize: "13px", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-            <span>📥</span>
+            <Download size={13} />
             <span className="hide-on-mobile-inline">Download App</span>
           </a>
           <button 
@@ -387,9 +394,13 @@ export default function Home() {
         </a>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", marginTop: "20px" }}>
           {isOnline ? (
-            <span className="online-badge" style={{ fontSize: "12px", padding: "6px 14px", borderRadius: "14px", border: "1px solid rgba(16, 185, 129, 0.25)" }}>⚡ Security Live</span>
+            <span className="online-badge" style={{ fontSize: "12px", padding: "6px 14px", borderRadius: "14px", border: "1px solid rgba(16, 185, 129, 0.25)", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <Zap size={13} /> Security Live
+            </span>
           ) : (
-            <span className="offline-badge" style={{ fontSize: "12px", padding: "6px 14px", borderRadius: "14px", border: "1px solid rgba(239, 68, 68, 0.25)" }}>📴 Local Scanner Mode</span>
+            <span className="offline-badge" style={{ fontSize: "12px", padding: "6px 14px", borderRadius: "14px", border: "1px solid rgba(239, 68, 68, 0.25)", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <WifiOff size={13} /> Local Scanner Mode
+            </span>
           )}
         </div>
       </div>
@@ -397,17 +408,19 @@ export default function Home() {
       {/* ====== HERO CONTAINER ====== */}
       <section className="landing-hero-container">
         <div className="landing-hero-text">
-          <span className="hero-tagline">🛡️ Anti-Phishing Ecosystem v2.0</span>
+          <span className="hero-tagline" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <Shield size={12} className="text-purple-400" /> Anti-Phishing Ecosystem v2.0
+          </span>
           <h1>Defend Against Cyber Threats <span>In Real-Time</span></h1>
           <p className="landing-hero-subtitle">
             Secure OS is a unified client-server security system. Download our lightweight native Android app to block zero-day scams offline, or try the interactive cloud scanning demo below.
           </p>
           <div className="landing-hero-ctas">
-            <a href="/app-debug.apk" download="SecureOS_v1.0.apk" className="btn btn-primary" style={{ padding: "0 28px", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              🤖 Download Android Client (APK)
+            <a href="/app-debug.apk" download="SecureOS_v1.0.apk" className="btn btn-primary" style={{ padding: "0 28px", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+              <Smartphone size={16} /> Download Android Client (APK)
             </a>
-            <button onClick={() => document.getElementById("demo-suite").scrollIntoView({ behavior: "smooth" })} className="btn btn-secondary">
-              👁️ Launch Web Sandbox
+            <button onClick={() => document.getElementById("demo-suite").scrollIntoView({ behavior: "smooth" })} className="btn btn-secondary" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+              <Eye size={16} /> Launch Web Sandbox
             </button>
           </div>
         </div>
@@ -418,7 +431,7 @@ export default function Home() {
               <div className="radar-sweep"></div>
               <div className="pulse-ring-landing"></div>
               <div className="shield-core">
-                <span className="shield-core-icon">🛡️</span>
+                <Shield size={54} className="shield-core-icon text-purple-400" style={{ strokeWidth: 1.5 }} />
               </div>
             </div>
           </div>
@@ -433,17 +446,17 @@ export default function Home() {
         </div>
         <div className="features-grid">
           <div className="feature-card">
-            <span className="feature-card-icon">🧠</span>
+            <Brain size={32} className="feature-card-icon text-purple-400" />
             <h3>On-Device ML Model</h3>
             <p>Runs a lightweight Logistic Regression classifier directly inside the app. Extracts URL properties locally with zero network delay and low battery usage.</p>
           </div>
           <div className="feature-card">
-            <span className="feature-card-icon">🎯</span>
+            <Target size={32} className="feature-card-icon text-cyan-400" />
             <h3>Typosquatting Shield</h3>
             <p>Uses Levenshtein Distance algorithms and Punycode decoders to instantly block fake lookalike links trying to impersonate popular brand sites.</p>
           </div>
           <div className="feature-card">
-            <span className="feature-card-icon">📦</span>
+            <Box size={32} className="feature-card-icon text-pink-400" />
             <h3>Safe Rendering Sandbox</h3>
             <p>Isolates cookies, tokens, and active scripts to render a secure static preview of suspicious websites safely on your screen.</p>
           </div>
@@ -464,32 +477,37 @@ export default function Home() {
             <button
               onClick={() => setActiveTab("check")}
               className={`demo-tab-btn ${activeTab === "check" ? "active" : ""}`}
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
-              🔍 Link Analyzer
+              <Search size={14} /> Link Analyzer
             </button>
             <button
               onClick={() => setActiveTab("email")}
               className={`demo-tab-btn ${activeTab === "email" ? "active" : ""}`}
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
-              📧 Email Header Scanner
+              <Mail size={14} /> Email Header Scanner
             </button>
             <button
               onClick={() => setActiveTab("qr")}
               className={`demo-tab-btn ${activeTab === "qr" ? "active" : ""}`}
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
-              📷 QR Code Scanner
+              <Camera size={14} /> QR Code Scanner
             </button>
             <button
               onClick={() => setActiveTab("history")}
               className={`demo-tab-btn ${activeTab === "history" ? "active" : ""}`}
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
-              📜 Scan Logs
+              <History size={14} /> Scan Logs
             </button>
             <button
               onClick={() => setActiveTab("tips")}
               className={`demo-tab-btn ${activeTab === "tips" ? "active" : ""}`}
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
-              🎓 Cybersecurity Quiz
+              <GraduationCap size={14} /> Cybersecurity Quiz
             </button>
           </div>
 

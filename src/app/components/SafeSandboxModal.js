@@ -1,6 +1,16 @@
 "use client";
 
 import { useMemo } from "react";
+import { 
+  Lock, 
+  Shield, 
+  Monitor, 
+  Code, 
+  Terminal, 
+  Globe, 
+  FileSearch, 
+  AlertTriangle 
+} from "lucide-react";
 
 export default function SafeSandboxModal({
   showSandbox,
@@ -93,7 +103,9 @@ export default function SafeSandboxModal({
             <span className="dot yellow"></span>
             <span className="dot green"></span>
           </div>
-          <div className="sandbox-title">🔒 Safe Preview Sandbox Explorer</div>
+          <div className="sandbox-title" style={{ display: "inline-flex", alignItems: "center", gap: "6px", justifyContent: "center" }}>
+            <Lock size={12} /> Safe Preview Sandbox Explorer
+          </div>
           <button onClick={() => setShowSandbox(false)} className="sandbox-close-btn">
             ✕
           </button>
@@ -101,7 +113,9 @@ export default function SafeSandboxModal({
 
         {/* Address bar */}
         <div className="sandbox-address-bar">
-          <span className="sandbox-status-lock">🔒 Sandboxed</span>
+          <span className="sandbox-status-lock" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+            <Lock size={10} /> Sandboxed
+          </span>
           <input type="text" readOnly value={scanResult.url} className="sandbox-address-input" />
           <span
             className={`rating-badge ${getRatingColorClass(scanResult.rating)}`}
@@ -116,7 +130,9 @@ export default function SafeSandboxModal({
           {/* Left info sidebar */}
           <div className="sandbox-sidebar">
             <div className="sandbox-sidebar-section">
-              <h4>🔒 SSL Status</h4>
+              <h4 style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <Lock size={10} /> SSL Status
+              </h4>
               {scanResult.deepScan?.ssl?.hasCert ? (
                 <div className="sandbox-badge green">Active Certificate</div>
               ) : (
@@ -141,7 +157,9 @@ export default function SafeSandboxModal({
               )}
             </div>
             <div className="sandbox-sidebar-section">
-              <h4>📂 Page Audit</h4>
+              <h4 style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <FileSearch size={10} /> Page Audit
+              </h4>
               <ul className="sandbox-structure-list">
                 <li>
                   <span>Forms Found</span>
@@ -173,8 +191,8 @@ export default function SafeSandboxModal({
                     style={{
                       color:
                         scanResult.deepScan?.page?.hasMetaRedirect || scanResult.deepScan?.page?.hasScriptRedirect
-                          ? "var(--color-suspicious)"
-                          : "var(--color-safe)",
+                           ? "var(--color-suspicious)"
+                           : "var(--color-safe)",
                     }}
                   >
                     {scanResult.deepScan?.page?.hasMetaRedirect || scanResult.deepScan?.page?.hasScriptRedirect
@@ -189,7 +207,9 @@ export default function SafeSandboxModal({
               </ul>
             </div>
             <div className="sandbox-sidebar-section">
-              <h4>🛡️ Domain Score</h4>
+              <h4 style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <Shield size={10} /> Domain Score
+              </h4>
               <div
                 style={{
                   fontSize: "28px",
@@ -213,16 +233,17 @@ export default function SafeSandboxModal({
             {/* Tab nav */}
             <div className="sandbox-tabs-nav">
               {[
-                { id: "render", label: "🖥 Render View" },
-                { id: "html", label: "📄 HTML Code" },
-                { id: "console", label: "⚡ Audit Console" },
+                { id: "render", label: "🖥 Render View", icon: <Monitor size={12} /> },
+                { id: "html", label: "📄 HTML Code", icon: <Code size={12} /> },
+                { id: "console", label: "⚡ Audit Console", icon: <Terminal size={12} /> },
               ].map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setSandboxTab(t.id)}
                   className={`sandbox-tab-btn ${sandboxTab === t.id ? "active" : ""}`}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
                 >
-                  {t.label}
+                  {t.icon} {t.label.split(" ").slice(1).join(" ")}
                 </button>
               ))}
             </div>
@@ -234,8 +255,8 @@ export default function SafeSandboxModal({
                   <h3>Title: {scanResult.deepScan?.page?.title || scanResult.domain}</h3>
                 </div>
                 <div className="sandbox-web-content">
-                  <p className="sandbox-warning-info-bar">
-                    ⚠️ Scripts, cookies, and external resources are disabled in this sandboxed view.
+                  <p className="sandbox-warning-info-bar" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    <AlertTriangle size={14} /> Scripts, cookies, and external resources are disabled in this sandboxed view.
                   </p>
                   <div className="sandbox-render-preview">
                     <div className="sandbox-render-placeholder">
@@ -249,9 +270,12 @@ export default function SafeSandboxModal({
                             <input type="text" placeholder="Email / Username" disabled />
                             <input type="password" placeholder="Password" disabled />
                             <button disabled>Sign In</button>
-                            <div className="mock-form-alert">
-                              🛑 WARNING: Credentials would be sent to:{" "}
-                              <strong>{scanResult.deepScan?.dns?.ip || "external servers"}</strong>
+                            <div className="mock-form-alert" style={{ display: "inline-flex", alignItems: "flex-start", gap: "6px" }}>
+                              <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: "2px" }} />
+                              <div>
+                                WARNING: Credentials would be sent to:{" "}
+                                <strong>{scanResult.deepScan?.dns?.ip || "external servers"}</strong>
+                              </div>
                             </div>
                           </div>
                         ) : (

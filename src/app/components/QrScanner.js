@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import { AlertTriangle } from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
 
 export default function QrScanner({ onScanSuccess, onScanError }) {
@@ -267,8 +268,8 @@ export default function QrScanner({ onScanSuccess, onScanError }) {
 
       {/* error message */}
       {errorMsg && (
-        <div className="qr-error-bar">
-          <span>⚠️</span>
+        <div className="qr-error-bar" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+          <AlertTriangle size={14} className="text-red-400" />
           <span>{errorMsg}</span>
         </div>
       )}
@@ -333,8 +334,8 @@ export default function QrScanner({ onScanSuccess, onScanError }) {
       </div>
 
       {fileScanError && (
-        <div className="qr-error-bar" style={{marginTop:"10px"}}>
-          <span>⚠️</span>
+        <div className="qr-error-bar" style={{marginTop:"10px", display: "inline-flex", alignItems: "center", gap: "6px"}}>
+          <AlertTriangle size={14} className="text-red-400" />
           <span>{fileScanError}</span>
         </div>
       )}

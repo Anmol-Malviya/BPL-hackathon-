@@ -1,31 +1,21 @@
 "use client";
 
+import { Activity, Zap, WifiOff } from "lucide-react";
+
 export default function Sidebar({ activeTab, setActiveTab, threatStats, navItems, isOnline }) {
   return (
     <aside className="sidebar">
       {/* Brand */}
       <div className="sidebar-brand">
-        <svg className="logo-icon" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M256 80 L380 135 C380 270 315 365 256 425 C197 365 132 270 132 135 Z"
-            fill="url(#shieldGradSide)"
-            stroke="#8b5cf6"
-            strokeWidth="8"
-          />
-          <defs>
-            <linearGradient id="shieldGradSide" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#a855f7" />
-              <stop offset="50%" stopColor="#8b5cf6" />
-              <stop offset="100%" stopColor="#06b6d4" />
-            </linearGradient>
-          </defs>
-        </svg>
+        <img className="logo-icon" src="/ic_app_logo.png" alt="Secure OS Logo" />
         <span className="sidebar-title">Secure OS</span>
       </div>
 
       {/* Threat Stats */}
       <div className="sidebar-stats">
-        <div className="stats-header">🎯 Threat Radar</div>
+        <div className="stats-header" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <Activity size={12} /> Threat Radar
+        </div>
         <div className="stats-grid">
           <div className="stat-item safe">
             <span className="stat-count">{threatStats.safe}</span>
@@ -59,9 +49,17 @@ export default function Sidebar({ activeTab, setActiveTab, threatStats, navItems
       {/* Connection Status */}
       <div className="sidebar-footer">
         <div className="connection-status">
-          <span className={`status-indicator ${isOnline ? "live" : "offline"}`}>
+          <span className={`status-indicator ${isOnline ? "live" : "offline"}`} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
             <span className="pulse-dot"></span>
-            {isOnline ? "⚡ Live Security Active" : "📴 Offline — Local Mode"}
+            {isOnline ? (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <Zap size={12} /> Live Security Active
+              </span>
+            ) : (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <WifiOff size={12} /> Offline — Local Mode
+              </span>
+            )}
           </span>
         </div>
       </div>

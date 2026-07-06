@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { History, FolderOpen } from "lucide-react";
 
 export default function HistoryTab({
   scanHistory,
@@ -26,7 +27,9 @@ export default function HistoryTab({
   return (
     <div className="glass-card" style={{ padding: "32px" }}>
       <div className="history-header">
-        <h2 className="history-title">📜 Scan History</h2>
+        <h2 className="history-title" style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+          <History size={20} /> Scan History
+        </h2>
         {scanHistory.length > 0 && (
           <button onClick={handleClearHistory} className="clear-history-btn">
             Clear All
@@ -55,7 +58,9 @@ export default function HistoryTab({
 
       {filteredHistory.length === 0 ? (
         <div className="empty-state">
-          <span className="empty-icon">📂</span>
+          <div className="empty-icon" style={{ display: "flex", justifyContent: "center", marginBottom: "8px" }}>
+            <FolderOpen size={42} className="text-muted" style={{ opacity: 0.4 }} />
+          </div>
           <p>No scans match this filter.</p>
           <p style={{ fontSize: "12px" }}>Your scanned links will appear here.</p>
         </div>

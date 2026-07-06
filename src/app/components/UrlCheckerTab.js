@@ -1,6 +1,23 @@
 "use client";
 
 import { useMemo } from "react";
+import { 
+  Shield, 
+  Link2, 
+  Download, 
+  Lightbulb, 
+  Lock, 
+  HelpCircle, 
+  Globe, 
+  Smartphone, 
+  CheckCircle2, 
+  AlertTriangle, 
+  ShieldAlert, 
+  Check, 
+  ShieldCheck, 
+  Settings, 
+  Activity 
+} from "lucide-react";
 
 export default function UrlCheckerTab({
   urlInput,
@@ -45,14 +62,16 @@ export default function UrlCheckerTab({
       {/* Left Panel — Input */}
       <div className="panel-left">
         <div className="glass-card checker-box">
-          <span className="section-eyebrow">🛡️ Threat Engine v2.0</span>
+          <span className="section-eyebrow" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <Shield size={10} className="text-purple-400" /> Threat Engine v2.0
+          </span>
           <h2 className="panel-title">Verify Link Safety</h2>
           <p className="hero-subtitle">
             Paste or type a suspicious URL. Our ML engine + heuristic analyzer gives you a real-time safety score.
           </p>
 
           <div className="input-wrapper">
-            <span className="input-icon">🔗</span>
+            <Link2 size={16} className="input-icon text-muted" style={{ display: "flex", alignItems: "center", justifyContent: "center" }} />
             <input
               type="text"
               placeholder="e.g. secure-paypal-update.com"
@@ -89,7 +108,7 @@ export default function UrlCheckerTab({
           <button
             onClick={() => handleCheckUrl()}
             className="btn btn-primary btn-full"
-            style={{ marginTop: "14px" }}
+            style={{ marginTop: "14px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
             disabled={!urlInput.trim() || deepScanLoading}
           >
             {deepScanLoading ? (
@@ -97,23 +116,27 @@ export default function UrlCheckerTab({
                 <span className="spinner"></span> Running Deep Analysis...
               </span>
             ) : (
-              <>🛡️ Analyze Link Safety</>
+              <>
+                <Shield size={16} /> Analyze Link Safety
+              </>
             )}
           </button>
         </div>
 
         {/* Tips Shortcut Card */}
         <div className="glass-card quick-tips-card">
-          <span className="quick-tips-label">💡 Quick Detection Tips</span>
+          <span className="quick-tips-label" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <Lightbulb size={14} className="text-yellow-400" /> Quick Detection Tips
+          </span>
           <div className="tip-pills">
             {[
-              { icon: "🔒", text: "Always check for 'https://' protocol" },
-              { icon: "🔤", text: "Spot brand-mimicking typos (paypa1.com)" },
-              { icon: "🌐", text: "Too many subdomains = red flag" },
-              { icon: "🔗", text: "Scan bit.ly / tinyurl before clicking" },
+              { icon: <Lock size={12} />, text: "Always check for 'https://' protocol" },
+              { icon: <HelpCircle size={12} />, text: "Spot brand-mimicking typos (paypa1.com)" },
+              { icon: <Globe size={12} />, text: "Too many subdomains = red flag" },
+              { icon: <Link2 size={12} />, text: "Scan bit.ly / tinyurl before clicking" },
             ].map((tip, i) => (
-              <div key={i} className="tip-pill">
-                <span className="tip-pill-icon">{tip.icon}</span>
+              <div key={i} className="tip-pill" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                <span className="tip-pill-icon" style={{ display: "inline-flex", alignItems: "center" }}>{tip.icon}</span>
                 {tip.text}
               </div>
             ))}
@@ -123,7 +146,7 @@ export default function UrlCheckerTab({
         {/* Download Android App Card */}
         <div className="glass-card download-app-card" style={{ padding: "18px", display: "flex", flexDirection: "column", gap: "12px", border: "1px solid rgba(6, 182, 212, 0.25)", background: "linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%)", marginTop: "14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span style={{ fontSize: "26px" }}>🤖</span>
+            <Smartphone size={26} className="text-cyan-400" />
             <div>
               <h4 style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "2px" }}>Secure OS for Android</h4>
               <p style={{ fontSize: "11px", color: "var(--text-secondary)", lineHeight: "1.4" }}>Get real-time offline protection, clipboard checks, and secure QR scanning on your mobile device.</p>
@@ -133,9 +156,9 @@ export default function UrlCheckerTab({
             href="/app-debug.apk"
             download="SecureOS_v1.0.apk"
             className="btn btn-secondary btn-full"
-            style={{ minHeight: "36px", height: "36px", fontSize: "13px", color: "var(--color-secondary)", borderColor: "rgba(6, 182, 212, 0.3)", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{ minHeight: "36px", height: "36px", fontSize: "13px", color: "var(--color-secondary)", borderColor: "rgba(6, 182, 212, 0.3)", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
           >
-            📥 Download Android App (APK)
+            <Download size={14} /> Download Android App (APK)
           </a>
         </div>
       </div>
@@ -169,8 +192,15 @@ export default function UrlCheckerTab({
                   <span className="score-label">Safety</span>
                 </div>
               </div>
-              <div className={`rating-badge ${getRatingColorClass(scanResult.rating)}`}>
-                {scanResult.rating === "SAFE" ? "✅" : scanResult.rating === "SUSPICIOUS" ? "⚠️" : "🚨"} {scanResult.rating}
+              <div className={`rating-badge ${getRatingColorClass(scanResult.rating)}`} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                {scanResult.rating === "SAFE" ? (
+                  <CheckCircle2 size={13} />
+                ) : scanResult.rating === "SUSPICIOUS" ? (
+                  <AlertTriangle size={13} />
+                ) : (
+                  <ShieldAlert size={13} />
+                )}
+                {scanResult.rating}
               </div>
               <p className="result-url">{scanResult.url}</p>
             </div>
@@ -178,7 +208,9 @@ export default function UrlCheckerTab({
             {/* URL Breakdown Visualizer */}
             {scanResult.breakdown && (
               <div className="url-breakdown-wrapper">
-                <div className="url-breakdown-title">🔗 URL Structure Breakdown</div>
+                <div className="url-breakdown-title" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                  <Link2 size={14} /> URL Structure Breakdown
+                </div>
                 <div className="url-breakdown-box">
                   <span
                     className={`breakdown-part protocol ${scanResult.breakdown.protocol.isSafe ? "safe" : "danger"}`}
@@ -201,8 +233,8 @@ export default function UrlCheckerTab({
                   )}
                 </div>
                 {scanResult.breakdown.typosquatTarget && (
-                  <div className="breakdown-alert">
-                    ⚠️ Mimics verified domain:{" "}
+                  <div className="breakdown-alert" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    <AlertTriangle size={13} /> Mimics verified domain:{" "}
                     <strong style={{ color: "var(--color-danger)", marginLeft: "4px" }}>
                       {scanResult.breakdown.typosquatTarget}
                     </strong>
@@ -214,17 +246,23 @@ export default function UrlCheckerTab({
             {/* Brand Comparison */}
             {scanResult.rating !== "SAFE" && matchedBrand && (
               <div className="brand-comparison-wrapper">
-                <div className="brand-comparison-title">❌ Brand Spoofing Detected</div>
+                <div className="brand-comparison-title" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                  <ShieldAlert size={14} /> Brand Spoofing Detected
+                </div>
                 <div className="brand-comparison-grid">
                   <div className="comparison-card suspicious-card">
                     <div className="comparison-status">SUSPICIOUS PATH</div>
                     <div className="comparison-domain">{scanResult.domain}</div>
-                    <div className="comparison-indicator red">⚠ Mimic Target</div>
+                    <div className="comparison-indicator red" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      <AlertTriangle size={12} /> Mimic Target
+                    </div>
                   </div>
                   <div className="comparison-card safe-card">
                     <div className="comparison-status">GENUINE BRAND</div>
                     <div className="comparison-domain">{matchedBrand}</div>
-                    <div className="comparison-indicator green">✓ Safe Official</div>
+                    <div className="comparison-indicator green" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      <Check size={12} /> Safe Official
+                    </div>
                   </div>
                 </div>
               </div>
@@ -240,13 +278,15 @@ export default function UrlCheckerTab({
                 className="btn btn-secondary btn-full"
                 style={{ display: "flex", gap: "8px", alignItems: "center", justifyContent: "center" }}
               >
-                🌐 Open Safe Browser Sandbox
+                <Globe size={14} /> Open Safe Browser Sandbox
               </button>
 
               {/* Threat Factor Warnings */}
               {scanResult.warnings.length > 0 && (
                 <div>
-                  <h3 className="detail-section-title">⚠️ Threat Factors ({scanResult.warnings.length})</h3>
+                  <h3 className="detail-section-title" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    <AlertTriangle size={14} className="text-amber-400" /> Threat Factors ({scanResult.warnings.length})
+                  </h3>
                   <div className="warning-list">
                     {scanResult.warnings.map((warning, idx) => (
                       <div key={idx} className={`warning-item severity-${warning.severity}`}>
@@ -264,13 +304,13 @@ export default function UrlCheckerTab({
               {/* Safe Signals */}
               {scanResult.safeIndicators.length > 0 && (
                 <div>
-                  <h3 className="detail-section-title">
-                    <span className="safe-icon">✓</span> Security Controls Passed
+                  <h3 className="detail-section-title" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    <ShieldCheck size={14} className="text-emerald-400" /> Security Controls Passed
                   </h3>
                   <div className="safe-list">
                     {scanResult.safeIndicators.map((indicator, index) => (
-                      <div key={index} className="safe-item">
-                        <span className="safe-icon">✓</span>
+                      <div key={index} className="safe-item" style={{ display: "flex", alignItems: "center" }}>
+                        <Check size={12} className="text-emerald-400" style={{ marginRight: "8px", flexShrink: 0 }} />
                         <span>{indicator}</span>
                       </div>
                     ))}
@@ -280,7 +320,9 @@ export default function UrlCheckerTab({
 
               {/* Technical Metadata */}
               <div>
-                <h3 className="detail-section-title">⚙️ Technical Metadata</h3>
+                <h3 className="detail-section-title" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                  <Settings size={14} /> Technical Metadata
+                </h3>
                 <div className="features-grid">
                   <div className="feature-pill">
                     <span className="feature-pill-label">TLD Dots</span>
@@ -306,7 +348,9 @@ export default function UrlCheckerTab({
               {/* Deep Scan Details */}
               {scanResult.deepScan && (
                 <div>
-                  <h3 className="detail-section-title">🕵️ Live Server Analysis</h3>
+                  <h3 className="detail-section-title" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    <Activity size={14} /> Live Server Analysis
+                  </h3>
                   <div className="deep-scan-meta-list">
                     <div className="meta-row">
                       <span className="meta-label">IP Address</span>
@@ -350,13 +394,16 @@ export default function UrlCheckerTab({
           </div>
         ) : (
           <div className="glass-card result-placeholder">
-            <div className="shield-check-icon">🛡️</div>
+            <div className="shield-check-icon" style={{ display: "flex", justifyContent: "center" }}>
+              <Shield size={48} className="text-purple-400" />
+            </div>
             <h3
               style={{
                 fontSize: "18px",
                 fontWeight: "750",
                 color: "var(--text-secondary)",
                 marginBottom: "8px",
+                marginTop: "16px"
               }}
             >
               Awaiting Analysis

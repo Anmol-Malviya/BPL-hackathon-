@@ -44,6 +44,7 @@ export default function RootLayout({ children }) {
           }
         `}} />
         <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/ic_app_logo.png" type="image/png" />
         <meta name="theme-color" content="#060411" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

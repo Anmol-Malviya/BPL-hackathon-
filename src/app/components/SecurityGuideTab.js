@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { GraduationCap, Trophy, Check } from "lucide-react";
 
 const PHISHING_TIPS = [
   {
@@ -90,8 +91,8 @@ export default function SecurityGuideTab() {
     <div className="dual-panel">
       {/* Tips Left */}
       <div className="panel-left">
-        <h2 style={{ fontSize: "24px", fontWeight: "800", marginBottom: "20px", paddingLeft: "4px" }}>
-          🎓 Security Guide
+        <h2 style={{ fontSize: "24px", fontWeight: "800", marginBottom: "20px", paddingLeft: "4px", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+          <GraduationCap size={22} className="text-purple-400" /> Security Guide
         </h2>
         {PHISHING_TIPS.map((tip) => (
           <div key={tip.id} className="tip-card glass-card">
@@ -110,9 +111,11 @@ export default function SecurityGuideTab() {
       <div className="panel-right">
         <div className="quiz-card glass-card">
           <div style={{ display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "space-between" }}>
-            <span className="quiz-tag">🎮 Test Your Skill</span>
-            <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "700" }}>
-              ✅ {quizCorrectCount}/{QUIZ_QUESTIONS.length} Correct
+            <span className="quiz-tag" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <Trophy size={12} /> Test Your Skill
+            </span>
+            <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+              <Check size={12} className="text-emerald-400" /> {quizCorrectCount}/{QUIZ_QUESTIONS.length} Correct
             </span>
           </div>
 
