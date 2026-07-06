@@ -1,17 +1,28 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { analyzeURL } from "../lib/phishingEngine";
+import { analyzeURL, analyzeEmailHeaders } from "../lib/phishingEngine";
 import dynamic from "next/dynamic";
 const QrScanner = dynamic(() => import("./components/QrScanner"), { ssr: false });
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("check"); // 'check' | 'qr' | 'history' | 'tips'
+  const [activeTab, setActiveTab] = useState("check"); // 'check' | 'email' | 'qr' | 'history' | 'tips'
   const [urlInput, setUrlInput] = useState("");
   const [isOnline, setIsOnline] = useState(true);
   const [scanResult, setScanResult] = useState(null);
   const [scanHistory, setScanHistory] = useState([]);
   
+  // Deep Scan states
+  const [isDeepScan, setIsDeepScan] = useState(false);
+  const [deepScanLoading, setDeepScanLoading] = useState(false);
+  
+  // Sandbox state
+  const [showSandbox, setShowSandbox] = useState(false);
+
+  // Email Analyzer state
+  const [emailHeadersInput, setEmailHeadersInput] = useState("");
+  const [emailScanResult, setEmailScanResult] = useState(null);
+
   // Quiz State
   const [quizAnswer, setQuizAnswer] = useState(null);
   const [quizIndex, setQuizIndex] = useState(0);
@@ -123,36 +134,179 @@ export default function Home() {
     }
   }, []);
 
+  // Web Audio Success Beep
+  const playSuccessBeep = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 note (clear and high)
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    } catch (e) {
+      console.warn("AudioContext block:", e);
+    }
+  };
+
   // Run Link Analysis
-  const handleCheckUrl = (urlToCheck) => {
+  const handleCheckUrl = async (urlToCheck) => {
     const targetUrl = urlToCheck || urlInput;
     if (!targetUrl.trim()) return;
 
-    const result = analyzeURL(targetUrl);
-    setScanResult(result);
+    setDeepScanLoading(isDeepScan);
+    let finalResult = analyzeURL(targetUrl);
 
-    // Save to History (no duplicates in recent list)
+    if (isDeepScan && isOnline) {
+      try {
+        const response = await fetch("/api/analyze", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ url: targetUrl }),
+        });
+
+        if (response.ok) {
+          const deepData = await response.json();
+          finalResult.deepScan = deepData;
+
+          // Integrate deep scan findings into risk model
+          let finalRiskScore = finalResult.riskScore;
+
+          // 1. DNS check
+          if (deepData.dns && !deepData.dns.active) {
+            finalResult.warnings.push({
+              id: "dns_inactive",
+              title: "Inactive Domain / No DNS",
+              desc: "This domain has no active DNS records. Phishing campaigns often deploy links using temporary domains that are taken offline quickly.",
+              severity: "high",
+              value: 40
+            });
+            finalRiskScore += 40;
+          }
+
+          // 2. SSL certificate warnings
+          if (deepData.ssl) {
+            if (!deepData.ssl.hasCert) {
+              finalResult.warnings.push({
+                id: "ssl_missing_cert",
+                title: "Missing SSL Certificate",
+                desc: "Could not retrieve a valid SSL certificate for HTTPS. The connection is insecure.",
+                severity: "high",
+                value: 30
+              });
+              finalRiskScore += 30;
+            } else {
+              if (deepData.ssl.isExpired) {
+                finalResult.warnings.push({
+                  id: "ssl_expired",
+                  title: "Expired SSL Certificate",
+                  desc: `The SSL certificate for this domain expired on ${new Date(deepData.ssl.validTo).toLocaleDateString()}.`,
+                  severity: "medium",
+                  value: 20
+                });
+                finalRiskScore += 20;
+              }
+              if (deepData.ssl.isSelfSigned) {
+                finalResult.warnings.push({
+                  id: "ssl_self_signed",
+                  title: "Self-Signed Certificate",
+                  desc: "The website uses a self-signed certificate which is not trusted by web browsers.",
+                  severity: "medium",
+                  value: 25
+                });
+                finalRiskScore += 25;
+              }
+            }
+          }
+
+          // 3. HTML Content phishing indicators
+          if (deepData.page && deepData.page.success) {
+            if (deepData.page.hasPasswordInput) {
+              finalResult.warnings.push({
+                id: "page_password_field",
+                title: "Login Form on Insecure/Suspicious Page",
+                desc: "We detected password input fields on this page. Entering credentials here could expose them to hackers.",
+                severity: "high",
+                value: 35
+              });
+              finalRiskScore += 35;
+            }
+            if (deepData.page.hasExternalForm) {
+              finalResult.warnings.push({
+                id: "page_external_submit",
+                title: "External Form Submission Target",
+                desc: "Data entered in forms on this website will be sent to a different domain. This is a common sign of credential harvesting.",
+                severity: "high",
+                value: 40
+              });
+              finalRiskScore += 40;
+            }
+            if (deepData.page.hasMetaRedirect || deepData.page.hasScriptRedirect) {
+              finalResult.warnings.push({
+                id: "page_redirects",
+                title: "Automatic Script Redirects",
+                desc: "The page contains code that automatically redirects visitors. Phishers use this to evade security scrapers.",
+                severity: "medium",
+                value: 15
+              });
+              finalRiskScore += 15;
+            }
+          }
+
+          // Recalculate rating with deep scan insights
+          finalRiskScore = Math.min(100, Math.max(0, finalRiskScore));
+          finalResult.riskScore = finalRiskScore;
+          finalResult.score = 100 - finalRiskScore;
+
+          if (finalRiskScore >= 70) {
+            finalResult.rating = "DANGEROUS";
+          } else if (finalRiskScore >= 35) {
+            finalResult.rating = "SUSPICIOUS";
+          } else {
+            finalResult.rating = "SAFE";
+          }
+        }
+      } catch (err) {
+        console.error("Deep Scan Request failed:", err);
+      } finally {
+        setDeepScanLoading(false);
+      }
+    }
+
+    setScanResult(finalResult);
+
+    // Save to History (no duplicates)
     const newHistoryItem = {
-      url: result.url,
-      rating: result.rating,
-      score: result.score,
+      url: finalResult.url,
+      rating: finalResult.rating,
+      score: finalResult.score,
       date: new Date().toLocaleDateString()
     };
 
     setScanHistory(prevHistory => {
-      const filtered = prevHistory.filter(item => item.url.toLowerCase() !== result.url.toLowerCase());
-      const updated = [newHistoryItem, ...filtered].slice(0, 15); // limit to 15 items
+      const filtered = prevHistory.filter(item => item.url.toLowerCase() !== finalResult.url.toLowerCase());
+      const updated = [newHistoryItem, ...filtered].slice(0, 15);
       localStorage.setItem("phishguard_history", JSON.stringify(updated));
       return updated;
     });
+  };
 
-    if (!urlToCheck) {
-      // Input was typed, scroll or update view if needed
-    }
+  // Run Email Header Analysis
+  const handleCheckEmailHeaders = () => {
+    if (!emailHeadersInput.trim()) return;
+    const result = analyzeEmailHeaders(emailHeadersInput);
+    setEmailScanResult(result);
   };
 
   // QR Code Scanner Success Handler
   const handleQrScanSuccess = (decodedUrl) => {
+    playSuccessBeep();
     setUrlInput(decodedUrl);
     setActiveTab("check");
     handleCheckUrl(decodedUrl);
@@ -162,6 +316,11 @@ export default function Home() {
   const handleClearInput = () => {
     setUrlInput("");
     setScanResult(null);
+  };
+
+  const handleClearEmailInput = () => {
+    setEmailHeadersInput("");
+    setEmailScanResult(null);
   };
 
   // Clear Scan History
@@ -193,6 +352,18 @@ export default function Home() {
     ? 2 * Math.PI * 50 * (1 - scanResult.score / 100) 
     : 0;
 
+  const emailStrokeDashoffset = emailScanResult
+    ? 2 * Math.PI * 50 * (1 - emailScanResult.score / 100)
+    : 0;
+
+  // Extract typosquat target for comparison visual
+  const typosquatWarning = scanResult?.warnings.find(w => w.id === 'typosquatting' || w.id === 'homograph_attack');
+  const matchedBrand = typosquatWarning?.desc.match(/mimics a highly visited website \(([^)]+)\)/)?.[1] 
+                       || typosquatWarning?.desc.match(/'([^']+)' but is not/)?.[1]
+                       || (scanResult?.domain.includes('google') ? 'google.com' : 
+                           scanResult?.domain.includes('paypal') ? 'paypal.com' : 
+                           scanResult?.domain.includes('meta') ? 'metamask.io' : null);
+
   return (
     <div className="app-shell">
       {/* Premium Header */}
@@ -213,7 +384,7 @@ export default function Home() {
         </div>
         <div>
           {isOnline ? (
-            <span className="online-badge">⚡ Online Engine</span>
+            <span className="online-badge">⚡ Live Security</span>
           ) : (
             <span className="offline-badge">📴 Offline Local</span>
           )}
@@ -226,13 +397,13 @@ export default function Home() {
         {/* VIEW 1: URL CHECKER */}
         <section className={`tab-view ${activeTab === "check" ? "active" : ""}`}>
           <div className="checker-box glass-card">
-            <h2 style={{ fontSize: "20px", fontWeight: "700" }}>Check a Website</h2>
+            <h2 style={{ fontSize: "20px", fontWeight: "700" }}>Verify Link safety</h2>
             <p className="hero-subtitle">Type, paste, or scan a web URL to analyze risk factors.</p>
             
             <div className="input-container mt-2">
               <input
                 type="text"
-                placeholder="e.g. paypal-login-update.com"
+                placeholder="e.g. secure-paypal-update.com"
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 className="url-input"
@@ -245,17 +416,39 @@ export default function Home() {
               )}
             </div>
 
+            {/* Deep scan option */}
+            <div className="deep-scan-toggle-container">
+              <label className="switch-label">
+                <input 
+                  type="checkbox" 
+                  checked={isDeepScan}
+                  onChange={(e) => setIsDeepScan(e.target.checked)}
+                  disabled={!isOnline}
+                />
+                <span className="switch-custom"></span>
+                <span className="switch-text">
+                  Enable Server-Side Deep Scan (DNS & Cert lookup)
+                </span>
+              </label>
+            </div>
+
             <button 
               onClick={() => handleCheckUrl()}
               className="btn btn-primary btn-full mt-2"
-              disabled={!urlInput.trim()}
+              disabled={!urlInput.trim() || deepScanLoading}
             >
-              🔒 Analyze Link Safety
+              {deepScanLoading ? (
+                <span className="loading-spinner-text">
+                  <span className="spinner"></span> Running Deep Analysis...
+                </span>
+              ) : (
+                <>🔒 Analyze Link Safety</>
+              )}
             </button>
           </div>
 
           {/* Analysis Result Dashboard */}
-          {scanResult && (
+          {scanResult && !deepScanLoading && (
             <div className="glass-card mt-2">
               <div className="result-header">
                 {/* Gauge Chart */}
@@ -284,7 +477,35 @@ export default function Home() {
                 <p className="result-url">{scanResult.url}</p>
               </div>
 
+              {/* Dynamic Brand Comparison Card */}
+              {scanResult.rating !== "SAFE" && matchedBrand && (
+                <div className="brand-comparison-wrapper">
+                  <div className="brand-comparison-title">❌ Potential Brand Spoofing Detected</div>
+                  <div className="brand-comparison-grid">
+                    <div className="comparison-card suspicious-card">
+                      <div className="comparison-status">SUSPICIOUS PATH</div>
+                      <div className="comparison-domain">{scanResult.domain}</div>
+                      <div className="comparison-indicator red">⚠️ Mimic Target</div>
+                    </div>
+                    <div className="comparison-card safe-card">
+                      <div className="comparison-status">GENUINE BRAND</div>
+                      <div className="comparison-domain">{matchedBrand}</div>
+                      <div className="comparison-indicator green">✓ Safe Official</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div style={{ padding: "0 24px 24px 24px" }} className="result-details">
+                {/* Safe Explorer Button */}
+                <button 
+                  onClick={() => setShowSandbox(true)} 
+                  className="btn btn-secondary btn-full mb-4"
+                  style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  🌐 Open Safe Preview Sandbox
+                </button>
+
                 {/* Warnings List */}
                 {scanResult.warnings.length > 0 && (
                   <div>
@@ -292,9 +513,9 @@ export default function Home() {
                       <span>⚠️</span> Threat Factors ({scanResult.warnings.length})
                     </h3>
                     <div className="warning-list mt-2">
-                      {scanResult.warnings.map((warning) => (
+                      {scanResult.warnings.map((warning, idx) => (
                         <div 
-                          key={warning.id} 
+                          key={idx} 
                           className={`warning-item severity-${warning.severity}`}
                         >
                           <div className="warning-item-header">
@@ -354,12 +575,191 @@ export default function Home() {
                   </div>
                 </div>
 
+                {/* Deep Scan Results Details */}
+                {scanResult.deepScan && (
+                  <div className="mt-4 deep-scan-details-section">
+                    <h3 className="detail-section-title">
+                      <span>🕵️</span> Live Server Analysis Results
+                    </h3>
+                    <div className="deep-scan-meta-list mt-2">
+                      <div className="meta-row">
+                        <span className="meta-label">IP Address</span>
+                        <span className="meta-value">{scanResult.deepScan.dns?.ip || 'Not Resolving'}</span>
+                      </div>
+                      {scanResult.deepScan.ssl?.hasCert && (
+                        <>
+                          <div className="meta-row">
+                            <span className="meta-label">SSL Issuer</span>
+                            <span className="meta-value">{scanResult.deepScan.ssl.issuer}</span>
+                          </div>
+                          <div className="meta-row">
+                            <span className="meta-label">SSL Expiry</span>
+                            <span className="meta-value">{new Date(scanResult.deepScan.ssl.validTo).toLocaleDateString()}</span>
+                          </div>
+                        </>
+                      )}
+                      {scanResult.deepScan.page?.success && (
+                        <>
+                          <div className="meta-row">
+                            <span className="meta-label">Server Title</span>
+                            <span className="meta-value" style={{ wordBreak: 'break-all', textAlign: 'right' }}>
+                              "{scanResult.deepScan.page.title}"
+                            </span>
+                          </div>
+                          <div className="meta-row">
+                            <span className="meta-label">Detected Forms</span>
+                            <span className="meta-value">{scanResult.deepScan.page.loginFormsCount}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
         </section>
 
-        {/* VIEW 2: QR CODE SCANNER */}
+        {/* VIEW 2: EMAIL HEADER ANALYZER */}
+        <section className={`tab-view ${activeTab === "email" ? "active" : ""}`}>
+          <div className="checker-box glass-card">
+            <h2 style={{ fontSize: "20px", fontWeight: "700" }}>Analyze Email Headers</h2>
+            <p className="hero-subtitle">Paste the raw email header text to check for sender spoofing (SPF, DKIM, DMARC).</p>
+            
+            <textarea
+              placeholder="Paste raw email headers here... (e.g. From, Return-Path, Received-SPF, Authentication-Results)"
+              value={emailHeadersInput}
+              onChange={(e) => setEmailHeadersInput(e.target.value)}
+              className="email-headers-input mt-2"
+              rows={8}
+            />
+
+            <div className="email-actions mt-2">
+              <button 
+                onClick={handleCheckEmailHeaders}
+                className="btn btn-primary btn-full"
+                disabled={!emailHeadersInput.trim()}
+              >
+                📧 Scan Sender Authentication
+              </button>
+              {emailHeadersInput && (
+                <button onClick={handleClearEmailInput} className="btn btn-secondary mt-2">
+                  Clear Text
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Email Analysis Results */}
+          {emailScanResult && (
+            <div className="glass-card mt-2">
+              <div className="result-header">
+                {/* Gauge Chart */}
+                <div className="score-gauge-container">
+                  <svg className="score-gauge">
+                    <circle className="circle-bg" cx="60" cy="60" r="50" />
+                    <circle 
+                      className={`circle-progress ${getRatingColorClass(emailScanResult.rating)}`} 
+                      cx="60" 
+                      cy="60" 
+                      r="50"
+                      strokeDasharray={2 * Math.PI * 50}
+                      strokeDashoffset={emailStrokeDashoffset}
+                    />
+                  </svg>
+                  <div className="score-text-wrapper">
+                    <span className="score-num">{emailScanResult.score}</span>
+                    <span className="score-label">Trust</span>
+                  </div>
+                </div>
+
+                <div className={`rating-badge ${getRatingColorClass(emailScanResult.rating)}`}>
+                  {emailScanResult.rating}
+                </div>
+
+                <div className="email-result-meta mt-2">
+                  <p><strong>From:</strong> {emailScanResult.from}</p>
+                  <p><strong>Subject:</strong> {emailScanResult.subject}</p>
+                  <p><strong>Date:</strong> {emailScanResult.date}</p>
+                </div>
+              </div>
+
+              <div style={{ padding: "0 24px 24px 24px" }} className="result-details">
+                {/* Security Protocol Pills */}
+                <div className="protocol-pills">
+                  <div className={`protocol-pill ${emailScanResult.spfStatus.toLowerCase()}`}>
+                    <span className="dot"></span>
+                    <span className="lbl">SPF: {emailScanResult.spfStatus}</span>
+                  </div>
+                  <div className={`protocol-pill ${emailScanResult.dkimStatus.toLowerCase()}`}>
+                    <span className="dot"></span>
+                    <span className="lbl">DKIM: {emailScanResult.dkimStatus}</span>
+                  </div>
+                  <div className={`protocol-pill ${emailScanResult.dmarcStatus.toLowerCase()}`}>
+                    <span className="dot"></span>
+                    <span className="lbl">DMARC: {emailScanResult.dmarcStatus}</span>
+                  </div>
+                </div>
+
+                {/* Domain match display */}
+                {emailScanResult.fromDomain && (
+                  <div className="email-domain-check mt-2">
+                    <div className="domain-row">
+                      <span>Claimed Domain:</span>
+                      <strong className="blue">{emailScanResult.fromDomain}</strong>
+                    </div>
+                    <div className="domain-row">
+                      <span>Envelope Origin:</span>
+                      <strong>{emailScanResult.returnPathDomain || 'Unknown'}</strong>
+                    </div>
+                  </div>
+                )}
+
+                {/* Warnings List */}
+                {emailScanResult.warnings.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="detail-section-title">
+                      <span>⚠️</span> Threat Factors ({emailScanResult.warnings.length})
+                    </h3>
+                    <div className="warning-list mt-2">
+                      {emailScanResult.warnings.map((warning, idx) => (
+                        <div 
+                          key={idx} 
+                          className={`warning-item severity-${warning.severity}`}
+                        >
+                          <div className="warning-item-header">
+                            <span className="warning-title">{warning.title}</span>
+                            <span className="warning-severity">{warning.severity} Risk</span>
+                          </div>
+                          <p className="warning-desc">{warning.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Safe Signals */}
+                {emailScanResult.safeIndicators.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="detail-section-title">
+                      <span className="safe-icon">✓</span> Security Controls Passed
+                    </h3>
+                    <div className="safe-list mt-2">
+                      {emailScanResult.safeIndicators.map((indicator, index) => (
+                        <div key={index} className="safe-item">
+                          <span className="safe-icon">✓</span>
+                          <span>{indicator}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* VIEW 3: QR CODE SCANNER */}
         <section className={`tab-view ${activeTab === "qr" ? "active" : ""}`}>
           <div className="glass-card" style={{ padding: "24px" }}>
             <h2 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "8px" }}>Scan QR Code</h2>
@@ -373,7 +773,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* VIEW 3: SCAN HISTORY */}
+        {/* VIEW 4: SCAN HISTORY */}
         <section className={`tab-view ${activeTab === "history" ? "active" : ""}`}>
           <div className="glass-card" style={{ padding: "24px" }}>
             <div className="history-header">
@@ -417,7 +817,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* VIEW 4: EDUCATION / TIPS */}
+        {/* VIEW 5: EDUCATION / TIPS */}
         <section className={`tab-view ${activeTab === "tips" ? "active" : ""}`}>
           <h2 style={{ fontSize: "20px", fontWeight: "700", paddingLeft: "4px" }}>Security Guide</h2>
           
@@ -481,6 +881,99 @@ export default function Home() {
 
       </main>
 
+      {/* Safe Sandbox Preview Drawer */}
+      {showSandbox && scanResult && (
+        <div className="sandbox-backdrop">
+          <div className="sandbox-modal glass-card">
+            <div className="sandbox-header">
+              <div className="browser-dots">
+                <span className="dot red"></span>
+                <span className="dot yellow"></span>
+                <span className="dot green"></span>
+              </div>
+              <div className="sandbox-title">Safe Preview Sandbox Explorer</div>
+              <button onClick={() => setShowSandbox(false)} className="sandbox-close-btn">✕</button>
+            </div>
+            
+            <div className="sandbox-address-bar">
+              <span className="sandbox-status-lock">🔒 Sandboxed View</span>
+              <input 
+                type="text" 
+                readOnly 
+                value={scanResult.url} 
+                className="sandbox-address-input" 
+              />
+            </div>
+
+            <div className="sandbox-content-body">
+              <div className="sandbox-sidebar">
+                <div className="sandbox-sidebar-section">
+                  <h4>🔒 SSL Status</h4>
+                  {scanResult.deepScan?.ssl?.hasCert ? (
+                    <div className="sandbox-badge green">Active Certificate</div>
+                  ) : (
+                    <div className="sandbox-badge red">Insecure Connection</div>
+                  )}
+                </div>
+                <div className="sandbox-sidebar-section mt-4">
+                  <h4>📂 Page Structure</h4>
+                  <ul className="sandbox-structure-list">
+                    <li>Forms Found: {scanResult.deepScan?.page?.loginFormsCount || 0}</li>
+                    <li>Password Inputs: {scanResult.deepScan?.page?.hasPasswordInput ? 'YES' : 'NO'}</li>
+                    <li>External submits: {scanResult.deepScan?.page?.hasExternalForm ? 'YES' : 'NO'}</li>
+                    <li>Auto Redirects: {(scanResult.deepScan?.page?.hasMetaRedirect || scanResult.deepScan?.page?.hasScriptRedirect) ? 'YES' : 'NO'}</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="sandbox-viewer">
+                <div className="sandbox-web-window">
+                  <div className="sandbox-web-header">
+                    <h3>Title: {scanResult.deepScan?.page?.title || scanResult.domain}</h3>
+                  </div>
+                  <div className="sandbox-web-content">
+                    <p className="sandbox-warning-info-bar">
+                      ⚠️ Interactive scripts, styles, and cookies have been fully disabled to keep your browser and credentials secure.
+                    </p>
+                    
+                    <div className="sandbox-render-preview">
+                      <div className="sandbox-render-placeholder">
+                        <div className="render-mock-header">
+                          <h4>{scanResult.domain}</h4>
+                        </div>
+                        <div className="render-mock-body">
+                          {scanResult.deepScan?.page?.hasPasswordInput ? (
+                            <div className="mock-login-form">
+                              <label>Sign in to your account</label>
+                              <input type="text" placeholder="Email / Username" disabled />
+                              <input type="password" placeholder="Password" disabled />
+                              <button disabled>Sign In</button>
+                              <div className="mock-form-alert">
+                                🛑 WARNING: Entering credentials here sends them to: <strong>{scanResult.deepScan?.dns?.ip || 'external servers'}</strong>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="mock-general-page">
+                              <h5>Welcome to {scanResult.domain}</h5>
+                              <p>This is a sandboxed text representation of the website landing page.</p>
+                              <div className="mock-paragraphs">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modern Sticky Bottom Navigation */}
       <nav className="bottom-nav">
         <button 
@@ -492,6 +985,17 @@ export default function Home() {
             <span className="nav-icon">🔍</span>
           </div>
           <span>Check Link</span>
+        </button>
+
+        <button 
+          onClick={() => setActiveTab("email")}
+          className={`nav-item ${activeTab === "email" ? "active" : ""}`}
+        >
+          <div className="nav-indicator"></div>
+          <div className="nav-icon-container">
+            <span className="nav-icon">📧</span>
+          </div>
+          <span>Email Headers</span>
         </button>
 
         <button 
@@ -524,7 +1028,7 @@ export default function Home() {
           <div className="nav-icon-container">
             <span className="nav-icon">🎓</span>
           </div>
-          <span>Security Tips</span>
+          <span>Guide</span>
         </button>
       </nav>
     </div>

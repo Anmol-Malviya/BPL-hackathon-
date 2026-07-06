@@ -58,11 +58,11 @@ export function extractModelFeatures(urlString) {
   let isValid = 0;
   let hostname = '';
   let path = '';
+  let urlToParse = url;
   
   try {
-    let urlToParse = url;
     if (!/^https?:\/\//i.test(urlToParse)) {
-      urlToParse = 'http://' + urlToParse;
+      urlToParse = 'https://' + urlToParse;
     }
     parsedUrl = new URL(urlToParse);
     isValid = 1;
@@ -103,7 +103,7 @@ export function extractModelFeatures(urlString) {
   const path_length = path.length;
 
   // Feature 6: isHttps
-  const isHttps = /^https:\/\//i.test(url) ? 1 : 0;
+  const isHttps = /^https:\/\//i.test(urlToParse) ? 1 : 0;
 
   // Feature 7: nb_dots
   const nb_dots = (url.match(/\./g) || []).length;
@@ -157,6 +157,83 @@ const SHORTENERS = [
   'bit.ly', 'tinyurl.com', 't.co', 'goo.gl', 'ow.ly', 'is.gd', 
   'buff.ly', 'adf.ly', 'bit.do', 'mcaf.ee', 'su.pr', 'rebrand.ly'
 ];
+
+// Detect IDN homograph attack
+function detectIDNHomograph(hostname) {
+  if (!hostname) return null;
+  const lowerHost = hostname.toLowerCase();
+  
+  // Punycode identifier
+  const isPunycode = lowerHost.split('.').some(part => part.startsWith('xn--'));
+  
+  // Character ranges (Cyrillic: \u0400-\u04FF, Greek: \u0370-\u03FF)
+  const hasCyrillic = /[\u0400-\u04FF]/.test(lowerHost);
+  const hasGreek = /[\u0370-\u03FF]/.test(lowerHost);
+  const hasLatin = /[a-z0-9]/.test(lowerHost);
+
+  // Cyrillic lookalikes map to standard Latin characters
+  const cyrillicToLatinMap = {
+    'а': 'a', // Cyrillic small letter a
+    'с': 'c', // Cyrillic small letter es
+    'е': 'e', // Cyrillic small letter ie
+    'ѕ': 's', // Cyrillic small letter dze
+    'і': 'i', // Cyrillic small letter byelorussian-ukrainian i
+    'ј': 'j', // Cyrillic small letter je
+    'о': 'o', // Cyrillic small letter o
+    'р': 'p', // Cyrillic small letter er
+    'у': 'y', // Cyrillic small letter u
+    'х': 'x', // Cyrillic small letter ha
+    'є': 'e', // Cyrillic small letter ukrainian ie
+    'ї': 'i'  // Cyrillic small letter yi
+  };
+
+  let decodedHost = lowerHost;
+  
+  // If Punycode or mixed scripts (e.g. Cyrillic characters mixed with Latin)
+  if (isPunycode || (hasCyrillic && hasLatin) || (hasGreek && hasLatin)) {
+    // Construct a visual "English lookalike representation"
+    let replacement = '';
+    let hasLookalikes = false;
+    for (let i = 0; i < lowerHost.length; i++) {
+      const char = lowerHost[i];
+      if (cyrillicToLatinMap[char]) {
+        replacement += cyrillicToLatinMap[char];
+        hasLookalikes = true;
+      } else {
+        replacement += char;
+      }
+    }
+    
+    return {
+      isAttack: true,
+      type: isPunycode ? 'Punycode Obfuscation (IDN)' : 'Mixed-Script Homograph',
+      lookalikeRepresentation: hasLookalikes ? replacement : null,
+      explanation: isPunycode 
+        ? 'The domain is registered as an Internationalized Domain Name (Punycode). This is often used to hide characters from other alphabets that look exactly like English letters.'
+        : 'The domain mixes English characters with identical-looking Cyrillic or Greek characters. Real brands never mix character sets.'
+    };
+  }
+  return null;
+}
+
+// Helper to extract the primary registered brand domain name (handling multi-part TLDs like .co.uk)
+function extractPrimaryDomainName(hostname) {
+  if (!hostname) return '';
+  const domainParts = hostname.replace(/^www\./, '').split('.');
+  if (domainParts.length < 2) return hostname;
+  
+  const lastPart = domainParts[domainParts.length - 1];
+  const secondLastPart = domainParts[domainParts.length - 2];
+  
+  const commonRegistryTlds = ['co', 'com', 'org', 'net', 'gov', 'edu', 'asn', 'id', 'ac'];
+  const isMultiPartSuffix = lastPart.length === 2 && commonRegistryTlds.includes(secondLastPart);
+  
+  if (isMultiPartSuffix && domainParts.length >= 3) {
+    return domainParts[domainParts.length - 3];
+  } else {
+    return domainParts[domainParts.length - 2];
+  }
+}
 
 // Perform complete security check (ML Model + Custom Heuristics)
 export function analyzeURL(urlString) {
@@ -214,7 +291,18 @@ export function analyzeURL(urlString) {
         'Verified Domain: This is an official domain of a verified high-trust brand.',
         'SSL/HTTPS connection is active (encrypted).'
       ],
-      features: extractModelFeatures(url)
+      features: extractModelFeatures(url),
+      breakdown: {
+        protocol: { text: 'https', isSafe: true },
+        hostname: hostname,
+        subdomains: hostname.replace(/^www\./, '').split('.').slice(0, -2).filter(Boolean),
+        primaryDomainName: extractPrimaryDomainName(hostname),
+        path: path,
+        isIpAddress: false,
+        isShortened: false,
+        typosquatTarget: null,
+        brandAbuseTriggered: false
+      }
     };
   }
 
@@ -284,9 +372,7 @@ export function analyzeURL(urlString) {
   let brandAbuseTriggered = false;
   
   if (!isIpAddress && hostname) {
-    const domainParts = hostname.replace('www.', '').split('.');
-    // get primary domain name (e.g., 'paypal' from 'paypal.com' or 'secure-paypal' from 'secure-paypal.com')
-    const primaryName = domainParts.length >= 2 ? domainParts[domainParts.length - 2] : hostname;
+    const primaryName = extractPrimaryDomainName(hostname);
 
     // Check if the domain contains a brand name but is NOT the brand's official site
     TOP_BRANDS.forEach(brand => {
@@ -363,8 +449,7 @@ export function analyzeURL(urlString) {
 
   // Heuristics Check 6: Shannon Entropy Check (random characters)
   if (!isIpAddress && hostname) {
-    const domainParts = hostname.replace('www.', '').split('.');
-    const primaryName = domainParts.length >= 2 ? domainParts[domainParts.length - 2] : domainParts[0];
+    const primaryName = extractPrimaryDomainName(hostname);
     const entropy = calculateShannonEntropy(primaryName);
     
     if (primaryName.length > 8 && entropy > 4.1) {
@@ -402,6 +487,40 @@ export function analyzeURL(urlString) {
       value: 30
     });
     riskScore += 30;
+  }
+
+  // Heuristics Check 9: IDN Homograph Attack Check
+  const homographResult = detectIDNHomograph(hostname);
+  if (homographResult) {
+    warnings.push({
+      id: 'homograph_attack',
+      title: homographResult.type,
+      desc: homographResult.explanation + (homographResult.lookalikeRepresentation ? ` Visually mimics: ${homographResult.lookalikeRepresentation}` : ''),
+      severity: 'high',
+      value: 60
+    });
+    riskScore += 60;
+  }
+
+  // Heuristics Check 10: Suspicious Top-Level Domains (TLDs)
+  const SUSPICIOUS_TLDS = [
+    'zip', 'mov', 'fit', 'top', 'tk', 'ml', 'ga', 'cf', 'gq', 'work', 
+    'click', 'download', 'racing', 'stream', 'win', 'bid', 'vip', 'xyz',
+    'ru', 'cn', 'su', 'buzz', 'date', 'icu', 'loan', 'men', 'xin'
+  ];
+  if (hostname && !isIpAddress) {
+    const parts = hostname.split('.');
+    const tld = parts[parts.length - 1];
+    if (tld && SUSPICIOUS_TLDS.includes(tld)) {
+      warnings.push({
+        id: 'suspicious_tld',
+        title: `Suspicious TLD (.${tld})`,
+        desc: `The Top-Level Domain '.${tld}' is frequently used for malicious activities, phishing, and distributing malware.`,
+        severity: 'medium',
+        value: 20
+      });
+      riskScore += 20;
+    }
   }
 
   // Calculate final score
@@ -446,6 +565,205 @@ export function analyzeURL(urlString) {
     mlProbability: parseFloat(mlProbability.toFixed(4)),
     warnings,
     safeIndicators,
-    features // Expose raw extracted features for details UI
+    features, // Expose raw extracted features for details UI
+    breakdown: {
+      protocol: {
+        text: protocol ? protocol.replace(':', '') : (hasHttps ? 'https' : 'http'),
+        isSafe: hasHttps
+      },
+      hostname: hostname,
+      subdomains: hostname.replace(/^www\./, '').split('.').slice(0, -2).filter(Boolean),
+      primaryDomainName: extractPrimaryDomainName(hostname),
+      path: path,
+      isIpAddress: isIpAddress,
+      isShortened: isShortened,
+      typosquatTarget: typosquatTarget,
+      brandAbuseTriggered: brandAbuseTriggered
+    }
+  };
+}
+
+// Perform Email Header analysis
+export function analyzeEmailHeaders(rawHeaders) {
+  if (!rawHeaders || !rawHeaders.trim()) {
+    return {
+      isValid: false,
+      score: 100,
+      warnings: ['Please enter email headers to analyze.']
+    };
+  }
+
+  const lines = rawHeaders.split('\n');
+  const headers = {};
+  
+  // Simple multi-line header parser
+  let currentHeader = null;
+  lines.forEach(line => {
+    if (line.startsWith(' ') || line.startsWith('\t')) {
+      if (currentHeader) {
+        headers[currentHeader] += ' ' + line.trim();
+      }
+    } else {
+      const match = line.match(/^([A-Za-z0-9\-]+):\s*(.*)$/);
+      if (match) {
+        currentHeader = match[1].toLowerCase();
+        headers[currentHeader] = match[2].trim();
+      }
+    }
+  });
+
+  const warnings = [];
+  const safeIndicators = [];
+  let riskScore = 0;
+
+  // Extract critical headers
+  const fromHeader = headers['from'] || '';
+  const returnPathHeader = headers['return-path'] || '';
+  const replyToHeader = headers['reply-to'] || '';
+  const authResults = headers['authentication-results'] || '';
+  const receivedSpf = headers['received-spf'] || '';
+  const subject = headers['subject'] || '';
+  const messageId = headers['message-id'] || '';
+
+  // 1. From & Return-Path Domain Discrepancy
+  const fromEmailMatch = fromHeader.match(/<([^>]+)>/) || fromHeader.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+  const fromEmail = fromEmailMatch ? fromEmailMatch[1] : '';
+  const fromDomain = fromEmail ? fromEmail.split('@')[1]?.toLowerCase() : '';
+
+  const returnPathEmailMatch = returnPathHeader.match(/<([^>]+)>/) || returnPathHeader.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+  const returnPathEmail = returnPathEmailMatch ? returnPathEmailMatch[1] : '';
+  const returnPathDomain = returnPathEmail ? returnPathEmail.split('@')[1]?.toLowerCase() : '';
+
+  if (fromDomain && returnPathDomain && fromDomain !== returnPathDomain) {
+    warnings.push({
+      id: 'domain_discrepancy',
+      title: 'Sender Domain Discrepancy',
+      desc: `The email claims to be from '${fromDomain}', but the return envelope path points to '${returnPathDomain}'. This indicates potential sender spoofing.`,
+      severity: 'high',
+      value: 35
+    });
+    riskScore += 35;
+  }
+
+  // 2. SPF Check
+  let spfStatus = 'NONE';
+  if (/spf=pass/i.test(authResults) || /pass/i.test(receivedSpf)) {
+    spfStatus = 'PASS';
+    safeIndicators.push('SPF Authentication passed (authorized sending server).');
+  } else if (/spf=fail/i.test(authResults) || /fail/i.test(receivedSpf)) {
+    spfStatus = 'FAIL';
+    warnings.push({
+      id: 'spf_fail',
+      title: 'SPF Verification Failed',
+      desc: 'The sending mail server is not authorized by the domain owner to send emails. High chance of spoofing.',
+      severity: 'high',
+      value: 40
+    });
+    riskScore += 40;
+  } else if (/spf=softfail/i.test(authResults)) {
+    spfStatus = 'SOFTFAIL';
+    warnings.push({
+      id: 'spf_softfail',
+      title: 'SPF Verification Soft-Failed',
+      desc: 'The sending server is not fully authorized, but the domain owner policy is lenient.',
+      severity: 'medium',
+      value: 15
+    });
+    riskScore += 15;
+  }
+
+  // 3. DKIM Check
+  let dkimStatus = 'NONE';
+  if (/dkim=pass/i.test(authResults)) {
+    dkimStatus = 'PASS';
+    safeIndicators.push('DKIM Signature is valid (email contents unaltered).');
+  } else if (/dkim=fail/i.test(authResults)) {
+    dkimStatus = 'FAIL';
+    warnings.push({
+      id: 'dkim_fail',
+      title: 'DKIM Signature Invalid',
+      desc: 'DKIM cryptographical signature failed verification. The email content might have been modified in transit.',
+      severity: 'high',
+      value: 30
+    });
+    riskScore += 30;
+  }
+
+  // 4. DMARC Check
+  let dmarcStatus = 'NONE';
+  if (/dmarc=pass/i.test(authResults)) {
+    dmarcStatus = 'PASS';
+    safeIndicators.push('DMARC policy alignment check passed.');
+  } else if (/dmarc=fail/i.test(authResults)) {
+    dmarcStatus = 'FAIL';
+    warnings.push({
+      id: 'dmarc_fail',
+      title: 'DMARC Alignment Failed',
+      desc: 'The email failed DMARC compliance, which checks if SPF/DKIM align with the "From" header.',
+      severity: 'high',
+      value: 35
+    });
+    riskScore += 35;
+  }
+
+  // 5. Subject Urgency / Phishing Keywords Check
+  const urgentKeywords = ['suspend', 'block', 'action required', 'urgent', 'verify', 'update', 'billing', 'security alert', 'unauthorized', 'reset password', 'account closed', 'invoice'];
+  const matchedSpamKeywords = [];
+  urgentKeywords.forEach(kw => {
+    if (subject.toLowerCase().includes(kw)) {
+      matchedSpamKeywords.push(kw);
+    }
+  });
+
+  if (matchedSpamKeywords.length > 0) {
+    warnings.push({
+      id: 'subject_urgency',
+      title: 'Urgent/Suspicious Subject Line',
+      desc: `Contains urgency or security-alert keywords (${matchedSpamKeywords.join(', ')}), a common trigger for social engineering.`,
+      severity: 'medium',
+      value: 15
+    });
+    riskScore += 15;
+  }
+
+  // 6. Generic headers check
+  if (!fromHeader) {
+    warnings.push({
+      id: 'no_from',
+      title: 'Missing "From" Header',
+      desc: 'No sender address could be found in the headers.',
+      severity: 'medium',
+      value: 20
+    });
+    riskScore += 20;
+  }
+
+  // Calculate safety score (100 - riskScore)
+  const finalScore = Math.max(0, Math.min(100, 100 - riskScore));
+  let rating = 'SAFE';
+  if (finalScore < 40) {
+    rating = 'DANGEROUS';
+  } else if (finalScore < 75) {
+    rating = 'SUSPICIOUS';
+  }
+
+  if (warnings.length === 0) {
+    safeIndicators.push('All sender details and cryptographic signatures are consistent.');
+  }
+
+  return {
+    isValid: true,
+    from: fromHeader || 'Unknown Sender',
+    subject: subject || '(No Subject)',
+    date: headers['date'] || 'Unknown Date',
+    fromDomain,
+    returnPathDomain,
+    spfStatus,
+    dkimStatus,
+    dmarcStatus,
+    score: finalScore,
+    rating,
+    warnings,
+    safeIndicators
   };
 }
