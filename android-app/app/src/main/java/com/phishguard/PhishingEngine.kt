@@ -16,6 +16,13 @@ object PhishingEngine {
         val warnings: List<String>
     )
 
+    private data class UrlInfo(
+        val hostname: String,
+        val path: String,
+        val protocol: String,
+        val isValid: Int
+    )
+
     private val TOP_BRANDS = listOf(
         "google.com", "facebook.com", "apple.com", "microsoft.com", 
         "amazon.com", "netflix.com", "paypal.com", "instagram.com", 
@@ -127,31 +134,29 @@ object PhishingEngine {
             return Result(rawUrl, "", true, 100, "SAFE", listOf("Empty URL"))
         }
 
-        var parsedUrl: URI? = null
-        var hostname = ""
-        var path = ""
-        var protocol = ""
-        var isValid = 0
         var isHttps = 0
-
-        try {
+        val parsedResult = try {
             var urlToParse = rawUrl
             if (!urlToParse.startsWith("http://", ignoreCase = true) && 
                 !urlToParse.startsWith("https://", ignoreCase = true)) {
                 urlToParse = "https://$urlToParse"
             }
-            parsedUrl = URI(urlToParse)
-            hostname = parsedUrl.host?.toLowerCase() ?: ""
-            path = parsedUrl.path ?: ""
-            protocol = parsedUrl.scheme?.toLowerCase() ?: ""
-            isValid = 1
-            if (protocol == "https") isHttps = 1
+            val parsedUrl = URI(urlToParse)
+            val h = parsedUrl.host?.lowercase() ?: ""
+            val p = parsedUrl.path ?: ""
+            val pr = parsedUrl.scheme?.lowercase() ?: ""
+            if (pr == "https") isHttps = 1
+            UrlInfo(h, p, pr, 1)
         } catch (e: Exception) {
-            isValid = 0
             val parts = rawUrl.split("/")
-            hostname = parts.firstOrNull()?.toLowerCase() ?: ""
-            path = if (parts.size > 1) rawUrl.substring(hostname.length) else ""
+            val h = parts.firstOrNull()?.lowercase() ?: ""
+            val p = if (parts.size > 1) rawUrl.substring(h.length) else ""
+            UrlInfo(h, p, "", 0)
         }
+
+        val hostname = parsedResult.hostname
+        val path = parsedResult.path
+        val isValid = parsedResult.isValid
 
         // Whitelist quick check
         val isWhitelisted = TOP_BRANDS.any { brand ->
@@ -174,7 +179,7 @@ object PhishingEngine {
         val atSymbol = if (rawUrl.contains("@")) 1 else 0
         
         var sensitiveWordsCount = 0
-        val lowerUrl = rawUrl.toLowerCase()
+        val lowerUrl = rawUrl.lowercase()
         for (word in SENSITIVE_WORDS) {
             sensitiveWordsCount += countOccurrences(lowerUrl, word)
         }

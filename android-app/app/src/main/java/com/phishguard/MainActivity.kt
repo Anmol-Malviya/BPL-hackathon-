@@ -4,9 +4,13 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.barcode.common.Barcode
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,6 +26,30 @@ class MainActivity : AppCompatActivity() {
         } else {
             // Opened from launcher icon
             setContentView(R.layout.activity_main)
+
+            // Setup QR code scanner trigger
+            val cardScanQr = findViewById<View>(R.id.cardScanQr)
+            cardScanQr.setOnClickListener {
+                val options = GmsBarcodeScannerOptions.Builder()
+                    .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                    .enableAutoZoom()
+                    .build()
+
+                val scanner = GmsBarcodeScanning.getClient(this, options)
+
+                scanner.startScan()
+                    .addOnSuccessListener { barcode ->
+                        val rawValue = barcode.rawValue
+                        if (!rawValue.isNullOrBlank()) {
+                            handleIncomingUrl(rawValue)
+                        } else {
+                            Toast.makeText(this, "Empty QR code detected.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Scan failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }
 
             val btnSettings = findViewById<Button>(R.id.btnSettings)
             btnSettings.setOnClickListener {

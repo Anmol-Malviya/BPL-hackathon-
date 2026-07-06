@@ -5,10 +5,12 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 
 class SandboxActivity : AppCompatActivity() {
 
+    @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sandbox)
@@ -53,16 +55,18 @@ class SandboxActivity : AppCompatActivity() {
             }
         }
 
+        // Setup Modern Back Press Dispatcher
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (sandboxWebView.canGoBack()) {
+                    sandboxWebView.goBack()
+                } else {
+                    finish()
+                }
+            }
+        })
+
         // 5. Load suspicious link in sandboxed web frame
         sandboxWebView.loadUrl(url)
-    }
-
-    override fun onBackPressed() {
-        val sandboxWebView = findViewById<WebView>(R.id.sandboxWebView)
-        if (sandboxWebView.canGoBack()) {
-            sandboxWebView.goBack()
-        } else {
-            super.onBackPressed()
-        }
     }
 }

@@ -287,76 +287,200 @@ export default function Home() {
   };
 
   return (
-    <div className="dashboard-layout">
-      {/* ====== SIDEBAR (Desktop only) ====== */}
-      <Sidebar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        threatStats={threatStats}
-        navItems={navItems}
-        isOnline={isOnline}
-      />
-
-      {/* ====== MOBILE HEADER ====== */}
-      <Header isOnline={isOnline} />
-
-      {/* ====== MAIN CONTENT ====== */}
-      <main className="main-content">
-        <div className="app-main">
-          {/* ===== VIEW 1: URL CHECKER ===== */}
-          {activeTab === "check" && (
-            <UrlCheckerTab
-              urlInput={urlInput}
-              setUrlInput={setUrlInput}
-              isDeepScan={isDeepScan}
-              setIsDeepScan={setIsDeepScan}
-              deepScanLoading={deepScanLoading}
-              isOnline={isOnline}
-              handleCheckUrl={handleCheckUrl}
-              handleClearInput={handleClearInput}
-              scanResult={scanResult}
-              getRatingColorClass={getRatingColorClass}
-              setShowSandbox={setShowSandbox}
-              setSandboxTab={setSandboxTab}
+    <div className="landing-layout">
+      {/* ====== HEADER ====== */}
+      <header className="landing-header">
+        <div className="landing-logo-container">
+          <svg className="landing-logo" viewBox="0 0 512 512" fill="none">
+            <path
+              d="M256 80 L380 135 C380 270 315 365 256 425 C197 365 132 270 132 135 Z"
+              fill="url(#hdrGrad)"
+              stroke="#8b5cf6"
+              strokeWidth="8"
             />
-          )}
-
-          {/* ===== VIEW 2: EMAIL HEADER ANALYZER ===== */}
-          {activeTab === "email" && (
-            <EmailAnalyzerTab
-              emailHeadersInput={emailHeadersInput}
-              setEmailHeadersInput={setEmailHeadersInput}
-              emailScanResult={emailScanResult}
-              handleCheckEmailHeaders={handleCheckEmailHeaders}
-              handleClearEmailInput={handleClearEmailInput}
-              getRatingColorClass={getRatingColorClass}
-            />
-          )}
-
-          {/* ===== VIEW 3: QR CODE SCANNER ===== */}
-          {activeTab === "qr" && <QrScannerTab handleQrScanSuccess={handleQrScanSuccess} />}
-
-          {/* ===== VIEW 4: HISTORY ===== */}
-          {activeTab === "history" && (
-            <HistoryTab
-              scanHistory={scanHistory}
-              historyFilter={historyFilter}
-              setHistoryFilter={setHistoryFilter}
-              handleClearHistory={handleClearHistory}
-              setUrlInput={setUrlInput}
-              handleCheckUrl={handleCheckUrl}
-              setActiveTab={setActiveTab}
-              getRatingColorClass={getRatingColorClass}
-            />
-          )}
-
-          {/* ===== VIEW 5: SECURITY GUIDE + QUIZ ===== */}
-          {activeTab === "tips" && <SecurityGuideTab />}
+            <defs>
+              <linearGradient id="hdrGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#a855f7" />
+                <stop offset="100%" stopColor="#06b6d4" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <span className="landing-title">PhishGuard</span>
         </div>
-      </main>
+        <div className="landing-header-links hide-on-mobile">
+          <a onClick={() => document.getElementById("features").scrollIntoView({ behavior: "smooth" })} className="landing-header-link">Features</a>
+          <a onClick={() => document.getElementById("demo-suite").scrollIntoView({ behavior: "smooth" })} className="landing-header-link">Web Demo</a>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {isOnline ? (
+            <span className="online-badge" style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.25)" }}>⚡ Live Scan</span>
+          ) : (
+            <span className="offline-badge" style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "12px", border: "1px solid rgba(239, 68, 68, 0.25)" }}>📴 Local</span>
+          )}
+          <a href="/app-debug.apk" download="PhishGuard_v1.0.apk" className="btn btn-primary" style={{ minHeight: "38px", height: "38px", padding: "0 16px", fontSize: "13px", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            📥 Download App
+          </a>
+        </div>
+      </header>
 
-      {/* ====== BOTTOM NAV ====== */}
-      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} navItems={navItems} />
+      {/* ====== HERO CONTAINER ====== */}
+      <section className="landing-hero-container">
+        <div className="landing-hero-text">
+          <span className="hero-tagline">🛡️ Anti-Phishing Ecosystem v2.0</span>
+          <h1>Defend Against Cyber Threats <span>In Real-Time</span></h1>
+          <p className="landing-hero-subtitle">
+            PhishGuard is a unified client-server security system. Download our lightweight native Android app to block zero-day scams offline, or try the interactive cloud scanning demo below.
+          </p>
+          <div className="landing-hero-ctas">
+            <a href="/app-debug.apk" download="PhishGuard_v1.0.apk" className="btn btn-primary" style={{ padding: "0 28px", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              🤖 Download Android Client (APK)
+            </a>
+            <button onClick={() => document.getElementById("demo-suite").scrollIntoView({ behavior: "smooth" })} className="btn btn-secondary">
+              👁️ Launch Web Sandbox
+            </button>
+          </div>
+        </div>
+
+        <div className="landing-hero-graphic">
+          <div className="shield-outer-circle">
+            <div className="shield-inner-circle">
+              <div className="radar-sweep"></div>
+              <div className="pulse-ring-landing"></div>
+              <div className="shield-core">
+                <span className="shield-core-icon">🛡️</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ====== FEATURES SECTION ====== */}
+      <section id="features" className="features-section" style={{ scrollMarginTop: "100px" }}>
+        <div style={{ textAlign: "center", marginBottom: "40px" }}>
+          <span className="section-eyebrow" style={{ color: "var(--color-primary-light)", fontWeight: "700", textTransform: "uppercase", fontSize: "11px", letterSpacing: "1.5px" }}>Core Capabilities</span>
+          <h2 style={{ fontSize: "28px", fontWeight: "800", marginTop: "6px" }}>Engine Features</h2>
+        </div>
+        <div className="features-grid">
+          <div className="feature-card">
+            <span className="feature-card-icon">🧠</span>
+            <h3>On-Device ML Model</h3>
+            <p>Runs a lightweight Logistic Regression classifier directly inside the app. Extracts URL properties locally with zero network delay and low battery usage.</p>
+          </div>
+          <div className="feature-card">
+            <span className="feature-card-icon">🎯</span>
+            <h3>Typosquatting Shield</h3>
+            <p>Uses Levenshtein Distance algorithms and Punycode decoders to instantly block fake lookalike links trying to impersonate popular brand sites.</p>
+          </div>
+          <div className="feature-card">
+            <span className="feature-card-icon">📦</span>
+            <h3>Safe Rendering Sandbox</h3>
+            <p>Isolates cookies, tokens, and active scripts to render a secure static preview of suspicious websites safely on your screen.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ====== WEB DEMO SECTION ====== */}
+      <section id="demo-suite" className="landing-demo-section">
+        <div style={{ textAlign: "center", marginBottom: "30px" }}>
+          <span className="section-eyebrow" style={{ color: "var(--color-primary-light)", fontWeight: "700", textTransform: "uppercase", fontSize: "11px", letterSpacing: "1.5px" }}>Interactive Playground</span>
+          <h2 style={{ fontSize: "28px", fontWeight: "800", marginTop: "6px" }}>Live Web Demo Suite</h2>
+          <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "6px" }}>Verify links, QR codes, or raw email headers in real-time using our security stack.</p>
+        </div>
+
+        <div className="landing-demo-container">
+          {/* Tabs Selector */}
+          <div className="demo-header-tabs">
+            <button
+              onClick={() => setActiveTab("check")}
+              className={`demo-tab-btn ${activeTab === "check" ? "active" : ""}`}
+            >
+              🔍 Link Analyzer
+            </button>
+            <button
+              onClick={() => setActiveTab("email")}
+              className={`demo-tab-btn ${activeTab === "email" ? "active" : ""}`}
+            >
+              📧 Email Header Scanner
+            </button>
+            <button
+              onClick={() => setActiveTab("qr")}
+              className={`demo-tab-btn ${activeTab === "qr" ? "active" : ""}`}
+            >
+              📷 QR Code Scanner
+            </button>
+            <button
+              onClick={() => setActiveTab("history")}
+              className={`demo-tab-btn ${activeTab === "history" ? "active" : ""}`}
+            >
+              📜 Scan Logs
+            </button>
+            <button
+              onClick={() => setActiveTab("tips")}
+              className={`demo-tab-btn ${activeTab === "tips" ? "active" : ""}`}
+            >
+              🎓 Cybersecurity Quiz
+            </button>
+          </div>
+
+          {/* Demo Content */}
+          <div className="demo-content-body">
+            {activeTab === "check" && (
+              <UrlCheckerTab
+                urlInput={urlInput}
+                setUrlInput={setUrlInput}
+                isDeepScan={isDeepScan}
+                setIsDeepScan={setIsDeepScan}
+                deepScanLoading={deepScanLoading}
+                isOnline={isOnline}
+                handleCheckUrl={handleCheckUrl}
+                handleClearInput={handleClearInput}
+                scanResult={scanResult}
+                getRatingColorClass={getRatingColorClass}
+                setShowSandbox={setShowSandbox}
+                setSandboxTab={setSandboxTab}
+              />
+            )}
+
+            {activeTab === "email" && (
+              <EmailAnalyzerTab
+                emailHeadersInput={emailHeadersInput}
+                setEmailHeadersInput={setEmailHeadersInput}
+                emailScanResult={emailScanResult}
+                handleCheckEmailHeaders={handleCheckEmailHeaders}
+                handleClearEmailInput={handleClearEmailInput}
+                getRatingColorClass={getRatingColorClass}
+              />
+            )}
+
+            {activeTab === "qr" && (
+              <QrScannerTab handleQrScanSuccess={handleQrScanSuccess} />
+            )}
+
+            {activeTab === "history" && (
+              <HistoryTab
+                scanHistory={scanHistory}
+                historyFilter={historyFilter}
+                setHistoryFilter={setHistoryFilter}
+                handleClearHistory={handleClearHistory}
+                setUrlInput={setUrlInput}
+                handleCheckUrl={handleCheckUrl}
+                setActiveTab={setActiveTab}
+                getRatingColorClass={getRatingColorClass}
+              />
+            )}
+
+            {activeTab === "tips" && (
+              <SecurityGuideTab />
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ====== FOOTER ====== */}
+      <footer className="landing-footer">
+        <p>Developed for <span>Bhopal Hackathon 2026</span></p>
+        <p>© 2026 PhishGuard. Empowering users with advanced offline & online threat mitigation.</p>
+      </footer>
 
       {/* ====== SAFE SANDBOX MODAL ====== */}
       <SafeSandboxModal

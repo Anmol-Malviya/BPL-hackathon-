@@ -119,6 +119,25 @@ export default function UrlCheckerTab({
             ))}
           </div>
         </div>
+
+        {/* Download Android App Card */}
+        <div className="glass-card download-app-card" style={{ padding: "18px", display: "flex", flexDirection: "column", gap: "12px", border: "1px solid rgba(6, 182, 212, 0.25)", background: "linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%)", marginTop: "14px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span style={{ fontSize: "26px" }}>🤖</span>
+            <div>
+              <h4 style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "2px" }}>PhishGuard for Android</h4>
+              <p style={{ fontSize: "11px", color: "var(--text-secondary)", lineHeight: "1.4" }}>Get real-time offline protection, clipboard checks, and secure QR scanning on your mobile device.</p>
+            </div>
+          </div>
+          <a
+            href="/app-debug.apk"
+            download="PhishGuard_v1.0.apk"
+            className="btn btn-secondary btn-full"
+            style={{ minHeight: "36px", height: "36px", fontSize: "13px", color: "var(--color-secondary)", borderColor: "rgba(6, 182, 212, 0.3)", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            📥 Download Android App (APK)
+          </a>
+        </div>
       </div>
 
       {/* Right Panel — Results */}

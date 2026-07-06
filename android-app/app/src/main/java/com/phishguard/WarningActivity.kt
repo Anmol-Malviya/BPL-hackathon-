@@ -16,7 +16,6 @@ class WarningActivity : AppCompatActivity() {
         setContentView(R.layout.activity_warning)
 
         val url = intent.getStringExtra("URL") ?: ""
-        val rating = intent.getStringExtra("RATING") ?: "DANGEROUS"
         val score = intent.getIntExtra("SCORE", 0)
         val warnings = intent.getStringArrayListExtra("WARNINGS") ?: ArrayList<String>()
 
