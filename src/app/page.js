@@ -477,6 +477,39 @@ export default function Home() {
                 <p className="result-url">{scanResult.url}</p>
               </div>
 
+              {/* URL Breakdown Visualizer */}
+              {scanResult.breakdown && (
+                <div className="url-breakdown-wrapper mt-3 mb-3" style={{ padding: "0 24px" }}>
+                  <div className="url-breakdown-title">🔗 Link Structure Breakdown</div>
+                  <div className="url-breakdown-box">
+                    <span className={`breakdown-part protocol ${scanResult.breakdown.protocol.isSafe ? 'safe' : 'danger'}`}>
+                      {scanResult.breakdown.protocol.text}://
+                    </span>
+                    {scanResult.breakdown.subdomains.map((sub, i) => (
+                      <span key={i} className="breakdown-part subdomain">
+                        {sub}.
+                      </span>
+                    ))}
+                    <span className={`breakdown-part domain ${scanResult.breakdown.typosquatTarget ? 'danger highlight-pulse' : 'normal'}`}>
+                      {scanResult.breakdown.primaryDomainName}
+                    </span>
+                    <span className="breakdown-part tld">
+                      .{scanResult.domain.split('.').pop()}
+                    </span>
+                    {scanResult.breakdown.path && scanResult.breakdown.path !== '/' && (
+                      <span className="breakdown-part path">
+                        {scanResult.breakdown.path}
+                      </span>
+                    )}
+                  </div>
+                  {scanResult.breakdown.typosquatTarget && (
+                    <div className="breakdown-alert mt-2">
+                      ⚠️ Mimics verified domain: <strong style={{ color: "var(--color-danger)" }}>{scanResult.breakdown.typosquatTarget}</strong>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Dynamic Brand Comparison Card */}
               {scanResult.rating !== "SAFE" && matchedBrand && (
                 <div className="brand-comparison-wrapper">
