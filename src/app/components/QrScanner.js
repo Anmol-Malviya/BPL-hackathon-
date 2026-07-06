@@ -1,320 +1,346 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 
 export default function QrScanner({ onScanSuccess, onScanError }) {
   const [hasCameraPermission, setHasCameraPermission] = useState(null);
-  const [isScanning, setIsScanning] = useState(false);
-  const [cameras, setCameras] = useState([]);
+  const [isScanning, setIsScanning]   = useState(false);
+  const [cameras, setCameras]         = useState([]);
   const [selectedCameraId, setSelectedCameraId] = useState("");
-  const [scanResult, setScanResult] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [scanResult, setScanResult]   = useState("");
+  const [errorMsg, setErrorMsg]       = useState("");
   const [fileScanError, setFileScanError] = useState("");
+  const [isDragging, setIsDragging]   = useState(false);
+  const [isFileScanning, setIsFileScanning] = useState(false);
+  const [fileScanSuccess, setFileScanSuccess] = useState(false);
 
-  const qrReaderRef = useRef(null);
   const html5QrCodeRef = useRef(null);
-  const fileInputRef = useRef(null);
+  const fileInputRef   = useRef(null);
 
-  // Initialize cameras list
+  // ─── Init cameras ────────────────────────────────────────────
   useEffect(() => {
-    // Check if mediaDevices are supported
-    if (typeof window !== "undefined" && navigator.mediaDevices) {
-      Html5Qrcode.getCameras()
-        .then((devices) => {
-          if (devices && devices.length > 0) {
-            setCameras(devices);
-            // Default to the back camera if available, otherwise the first camera
-            const backCamera = devices.find((device) =>
-              device.label.toLowerCase().includes("back") ||
-              device.label.toLowerCase().includes("environment")
-            );
-            setSelectedCameraId(backCamera ? backCamera.id : devices[0].id);
-            setHasCameraPermission(true);
-          } else {
-            setHasCameraPermission(false);
-            setErrorMsg("No cameras found on this device.");
-          }
-        })
-        .catch((err) => {
-          console.error("Error getting cameras:", err);
-          setHasCameraPermission(false);
-          setErrorMsg("Camera permission denied or not accessible.");
-        });
-    }
+    if (typeof window === "undefined" || !navigator.mediaDevices) return;
 
-    return () => {
-      // Cleanup: stop scanner if running
-      stopScanning();
-    };
+    Html5Qrcode.getCameras()
+      .then((devices) => {
+        if (devices && devices.length > 0) {
+          setCameras(devices);
+          const back = devices.find((d) =>
+            d.label.toLowerCase().includes("back") ||
+            d.label.toLowerCase().includes("environment")
+          );
+          setSelectedCameraId(back ? back.id : devices[0].id);
+          setHasCameraPermission(true);
+        } else {
+          setHasCameraPermission(false);
+          setErrorMsg("No cameras found on this device.");
+        }
+      })
+      .catch(() => {
+        setHasCameraPermission(false);
+        setErrorMsg("Camera permission denied or not accessible.");
+      });
+
+    return () => { stopScanning(); };
   }, []);
 
+  // ─── Start scanning ───────────────────────────────────────────
   const startScanning = async (cameraId) => {
     if (!cameraId) return;
     setErrorMsg("");
     setScanResult("");
+    setFileScanError("");
+    setFileScanSuccess(false);
 
     try {
-      if (html5QrCodeRef.current) {
-        await stopScanning();
-      }
+      if (html5QrCodeRef.current) await stopScanning();
 
-      const html5QrCode = new Html5Qrcode("qr-scanner-view");
-      html5QrCodeRef.current = html5QrCode;
+      const qr = new Html5Qrcode("qr-scanner-view");
+      html5QrCodeRef.current = qr;
 
-      const config = {
-        fps: 10,
-        qrbox: (width, height) => {
-          const size = Math.min(width, height) * 0.7;
-          return { width: size, height: size };
-        },
-      };
-
-      await html5QrCode.start(
+      await qr.start(
         cameraId,
-        config,
-        (decodedText) => {
-          setScanResult(decodedText);
-          if (onScanSuccess) {
-            onScanSuccess(decodedText);
-          }
-          stopScanning();
+        {
+          fps: 12,
+          qrbox: (w, h) => {
+            const s = Math.max(50, Math.min(w, h) * 0.65);
+            return { width: s, height: s };
+          },
+          aspectRatio: 1.0,
         },
-        (errorMessage) => {
-          // Silent scan failure (usually just searching frame by frame)
-          if (onScanError) {
-            onScanError(errorMessage);
-          }
-        }
+        (decoded) => {
+          setScanResult(decoded);
+          stopScanning();
+          if (onScanSuccess) onScanSuccess(decoded);
+        },
+        (err) => { if (onScanError) onScanError(err); }
       );
 
       setIsScanning(true);
     } catch (err) {
-      console.error("Failed to start scanning:", err);
-      setErrorMsg("Could not start camera stream. Ensure camera is not used by another app.");
+      console.error("Camera start failed:", err);
+      setErrorMsg("Could not start camera. Make sure another app isn't using it.");
       setIsScanning(false);
     }
   };
 
+  // ─── Stop scanning ────────────────────────────────────────────
   const stopScanning = async () => {
-    if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+    if (html5QrCodeRef.current?.isScanning) {
       try {
         await html5QrCodeRef.current.stop();
-        html5QrCodeRef.current = null;
-        setIsScanning(false);
-      } catch (err) {
-        console.error("Error stopping scanning:", err);
-      }
+      } catch (_) {}
+      html5QrCodeRef.current = null;
     }
+    setIsScanning(false);
   };
 
-  const handleToggleScan = () => {
+  // ─── Toggle / flip ────────────────────────────────────────────
+  const handleToggle = () => {
     if (isScanning) {
       stopScanning();
     } else {
-      let camId = selectedCameraId;
-      if (!camId && cameras.length > 0) {
-        const backCamera = cameras.find((device) =>
-          device.label.toLowerCase().includes("back") ||
-          device.label.toLowerCase().includes("environment")
+      let id = selectedCameraId;
+      if (!id && cameras.length > 0) {
+        const back = cameras.find((d) =>
+          d.label.toLowerCase().includes("back") ||
+          d.label.toLowerCase().includes("environment")
         );
-        camId = backCamera ? backCamera.id : cameras[0].id;
-        setSelectedCameraId(camId);
+        id = back ? back.id : cameras[0].id;
+        setSelectedCameraId(id);
       }
-      startScanning(camId);
+      startScanning(id);
     }
   };
 
-  const handleFlipCamera = () => {
+  const handleFlip = () => {
     if (cameras.length <= 1) return;
-    const currentIndex = cameras.findIndex((c) => c.id === selectedCameraId);
-    const nextIndex = (currentIndex + 1) % cameras.length;
-    const nextCameraId = cameras[nextIndex].id;
-    setSelectedCameraId(nextCameraId);
-    if (isScanning) {
-      startScanning(nextCameraId);
-    }
+    const idx    = cameras.findIndex((c) => c.id === selectedCameraId);
+    const nextId = cameras[(idx + 1) % cameras.length].id;
+    setSelectedCameraId(nextId);
+    if (isScanning) startScanning(nextId);
   };
 
-  const getActiveCameraLabel = () => {
-    const activeCam = cameras.find((c) => c.id === selectedCameraId);
-    if (!activeCam) return "Live Scanner";
-    const label = activeCam.label.toLowerCase();
-    if (label.includes("back") || label.includes("environment") || label.includes("rear")) return "Rear Camera";
-    if (label.includes("front") || label.includes("user")) return "Front Camera";
-    return activeCam.label || `Camera ${cameras.indexOf(activeCam) + 1}`;
+  const cameraLabel = () => {
+    const cam = cameras.find((c) => c.id === selectedCameraId);
+    if (!cam) return "Camera";
+    const l = cam.label.toLowerCase();
+    if (l.includes("back") || l.includes("environment") || l.includes("rear")) return "Rear Camera";
+    if (l.includes("front") || l.includes("user")) return "Front Camera";
+    return `Camera ${cameras.indexOf(cam) + 1}`;
   };
 
-  // Handle file upload scanning
-  const handleFileScan = async (e) => {
-    const file = e.target.files[0];
+  // ─── File / drag-and-drop scan ────────────────────────────────
+  const scanFile = async (file) => {
     if (!file) return;
-
     setFileScanError("");
     setScanResult("");
+    setFileScanSuccess(false);
+    setIsFileScanning(true);
 
     try {
-      // Create temporary scanner instance
-      const html5QrCode = new Html5Qrcode("qr-file-dummy-container");
-      
-      const decodedText = await html5QrCode.scanFile(file, true);
-      setScanResult(decodedText);
-      if (onScanSuccess) {
-        onScanSuccess(decodedText);
-      }
-      
-      // Cleanup dummy container right after
-      html5QrCode.clear();
-    } catch (err) {
-      console.error("Error scanning file:", err);
-      setFileScanError("Could not detect a QR code in this image. Try another or adjust lighting.");
+      const qr = new Html5Qrcode("qr-file-dummy-container");
+      const decoded = await qr.scanFile(file, true);
+      qr.clear();
+      setScanResult(decoded);
+      setFileScanSuccess(true);
+      if (onScanSuccess) onScanSuccess(decoded);
+    } catch {
+      setFileScanError("No QR code detected. Try a clearer image or better lighting.");
+    } finally {
+      setIsFileScanning(false);
     }
   };
 
-  const triggerFileInput = () => {
-    fileInputRef.current.click();
-  };
+  const handleFileChange = (e) => scanFile(e.target.files[0]);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) scanFile(file);
+  }, []);
+
+  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = () => setIsDragging(false);
 
   return (
-    <div className="qr-scanner-wrapper">
-      {/* Target for camera scan */}
-      <div className="scanner-container">
+    <div className="qr-root">
+
+      {/* ── VIEWFINDER ─────────────────────────────────────── */}
+      <div className={`qr-viewfinder ${isScanning ? "active" : ""}`}>
+
+        {/* idle state */}
         {!isScanning && (
-          <div className="scanner-placeholder">
-            <div className="placeholder-glow"></div>
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="placeholder-svg">
-              <path d="M4 8V6C4 4.89543 4.89543 4 6 4H8" stroke="url(#primaryGrad)" strokeWidth="2.5" strokeLinecap="round"/>
-              <path d="M20 8V6C20 4.89543 19.1046 4 18 4H16" stroke="url(#primaryGrad)" strokeWidth="2.5" strokeLinecap="round"/>
-              <path d="M4 16V18C4 19.1046 4.89543 20 6 20H8" stroke="url(#primaryGrad)" strokeWidth="2.5" strokeLinecap="round"/>
-              <path d="M20 16V18C20 19.1046 19.1046 20 18 20H16" stroke="url(#primaryGrad)" strokeWidth="2.5" strokeLinecap="round"/>
-              <rect x="7" y="7" width="10" height="10" rx="2" stroke="#fff" strokeWidth="2" strokeDasharray="3 3"/>
-              <path d="M10 12H14M12 10V14" stroke="var(--color-secondary)" strokeWidth="2" strokeLinecap="round"/>
-              <defs>
-                <linearGradient id="primaryGrad" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="var(--color-primary)"/>
-                  <stop offset="1" stopColor="var(--color-secondary)"/>
-                </linearGradient>
-              </defs>
-            </svg>
-            <div className="placeholder-text-group">
-              <h3>QR Scanner</h3>
-              <p>Scan safe links instantly using your camera</p>
+          <div className="qr-idle">
+            <div className="qr-idle-glow" />
+            {/* animated QR icon */}
+            <div className="qr-idle-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="url(#qrGrad)" strokeWidth="2" strokeLinecap="round">
+                <rect x="3" y="3" width="5" height="5" rx="1"/>
+                <rect x="16" y="3" width="5" height="5" rx="1"/>
+                <rect x="3" y="16" width="5" height="5" rx="1"/>
+                <rect x="16" y="16" width="5" height="5" rx="1"/>
+                <path d="M9 4h6M9 20h6M4 9v6M20 9v6"/>
+                <rect x="10" y="10" width="4" height="4" rx="0.5" fill="url(#qrGrad)" stroke="none"/>
+                <defs>
+                  <linearGradient id="qrGrad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#8b5cf6"/>
+                    <stop offset="1" stopColor="#06b6d4"/>
+                  </linearGradient>
+                </defs>
+              </svg>
             </div>
-            <button 
-              onClick={handleToggleScan}
-              className="btn btn-primary btn-scan-start"
-              disabled={hasCameraPermission === false && !errorMsg}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="btn-icon">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
-              Start Camera Scan
-            </button>
+            <p className="qr-idle-title">Point Camera at QR Code</p>
+            <p className="qr-idle-sub">Position the QR code inside the frame to scan automatically</p>
           </div>
         )}
 
-        <div 
-          id="qr-scanner-view" 
-          className="scanner-view"
-          style={{ display: isScanning ? "block" : "none", width: "100%", height: "100%" }}
-        ></div>
+        {/* actual camera feed */}
+        <div
+          id="qr-scanner-view"
+          className="qr-feed"
+          style={{ display: isScanning ? "block" : "none" }}
+        />
 
+        {/* corner brackets overlay */}
         {isScanning && (
-          <div className="scanner-overlay">
-            <div className="scanner-laser"></div>
-            <div className="scanner-corner top-left"></div>
-            <div className="scanner-corner top-right"></div>
-            <div className="scanner-corner bottom-left"></div>
-            <div className="scanner-corner bottom-right"></div>
+          <div className="qr-brackets">
+            <span className="qr-bracket tl"/>
+            <span className="qr-bracket tr"/>
+            <span className="qr-bracket bl"/>
+            <span className="qr-bracket br"/>
+            <div className="qr-laser"/>
           </div>
         )}
 
-        {/* Floating live status overlay */}
+        {/* top status pill */}
         {isScanning && (
-          <div className="scanner-status-overlay">
-            <span className="scanner-status-dot"></span>
-            <span className="scanner-status-text">
-              {getActiveCameraLabel()}
-            </span>
+          <div className="qr-status-pill">
+            <span className="qr-live-dot"/>
+            <span>{cameraLabel()}</span>
           </div>
         )}
 
-        {/* Floating controls inside viewport */}
-        {isScanning && (
-          <div className="scanner-actions-overlay">
-            <button 
-              onClick={stopScanning} 
-              className="action-circle-btn stop-btn"
-              title="Stop Scanning"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
-              </svg>
-            </button>
-
-            {cameras.length > 1 && (
-              <button 
-                onClick={handleFlipCamera} 
-                className="action-circle-btn flip-btn"
-                title="Flip Camera"
-              >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        {/* bottom controls bar */}
+        <div className="qr-controls">
+          <button
+            onClick={handleToggle}
+            className={`qr-main-btn ${isScanning ? "stop" : "start"}`}
+            disabled={hasCameraPermission === false}
+          >
+            {isScanning ? (
+              <>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="4" y="4" width="16" height="16" rx="3"/>
                 </svg>
-              </button>
+                Stop Camera
+              </>
+            ) : (
+              <>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                Start Camera
+              </>
             )}
-          </div>
-        )}
+          </button>
+
+          {cameras.length > 1 && (
+            <button
+              onClick={handleFlip}
+              className="qr-flip-btn"
+              title="Flip Camera"
+              disabled={!isScanning}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 4v6h6"/>
+                <path d="M23 20v-6h-6"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
+      {/* error message */}
       {errorMsg && (
-        <div className="error-message">
-          <span className="error-icon">⚠️</span>
+        <div className="qr-error-bar">
+          <span>⚠️</span>
           <span>{errorMsg}</span>
         </div>
       )}
 
-      {/* File Upload Scanning Section */}
-      <div className="file-scan-section">
-        <div className="divider">
-          <span>OR</span>
-        </div>
-        
-        <div 
-          onClick={triggerFileInput} 
-          className="upload-dropzone glass-card"
-        >
-          <div className="upload-icon-container">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="upload-svg">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-          </div>
-          <div className="upload-text-content">
-            <p className="upload-main-text">Upload QR Code Image</p>
-            <p className="upload-sub-text">Drag & drop or tap to browse library</p>
+      {/* success result */}
+      {scanResult && (
+        <div className="qr-success-bar">
+          <span className="qr-success-icon">✓</span>
+          <div>
+            <p className="qr-success-label">QR Code Detected — Analyzing...</p>
+            <p className="qr-success-url">{scanResult}</p>
           </div>
         </div>
+      )}
 
+      {/* ── DIVIDER ────────────────────────────────────────── */}
+      <div className="qr-divider"><span>OR</span></div>
+
+      {/* ── DRAG & DROP UPLOAD ──────────────────────────────── */}
+      <div
+        className={`qr-dropzone ${isDragging ? "dragging" : ""} ${fileScanSuccess ? "success" : ""}`}
+        onClick={() => fileInputRef.current?.click()}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+      >
         <input
           type="file"
-          ref={fileInputRef}
-          onChange={handleFileScan}
           accept="image/*"
+          ref={fileInputRef}
+          onChange={handleFileChange}
           style={{ display: "none" }}
         />
-        {fileScanError && (
-          <div className="error-message mt-2">
-            <span className="error-icon">⚠️</span>
-            <span>{fileScanError}</span>
+
+        {isFileScanning ? (
+          <div className="qr-dropzone-content">
+            <div className="qr-file-spinner"/>
+            <p className="qr-dropzone-title">Scanning image...</p>
+          </div>
+        ) : fileScanSuccess ? (
+          <div className="qr-dropzone-content">
+            <div className="qr-dropzone-check">✓</div>
+            <p className="qr-dropzone-title" style={{color:"var(--color-safe)"}}>QR Code Found!</p>
+            <p className="qr-dropzone-sub">Tap to scan another image</p>
+          </div>
+        ) : (
+          <div className="qr-dropzone-content">
+            <div className="qr-dropzone-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                <path d="M14 14h1v1M14 18h1M18 14h1M18 18h1"/>
+              </svg>
+            </div>
+            <div>
+              <p className="qr-dropzone-title">{isDragging ? "Drop image here" : "Upload QR Code Image"}</p>
+              <p className="qr-dropzone-sub">Drag & drop or tap to browse · PNG, JPG, WEBP</p>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Hidden dummy container for library's file scanning requirements */}
-      <div id="qr-file-dummy-container" style={{ display: "none" }}></div>
+      {fileScanError && (
+        <div className="qr-error-bar" style={{marginTop:"10px"}}>
+          <span>⚠️</span>
+          <span>{fileScanError}</span>
+        </div>
+      )}
+
+      {/* Hidden dummy container required by html5-qrcode for file scans */}
+      <div id="qr-file-dummy-container" style={{ display: "none" }}/>
     </div>
   );
 }
