@@ -1,7 +1,13 @@
 import modelWeights from './phishing_model_weights.json';
 
-// Levenshtein distance to check typosquatting
+// Levenshtein distance to check typosquatting (memoized for high performance)
+const levenshteinCache = {};
 function getLevenshteinDistance(a, b) {
+  const key = `${a}:${b}`;
+  if (levenshteinCache[key] !== undefined) return levenshteinCache[key];
+  const revKey = `${b}:${a}`;
+  if (levenshteinCache[revKey] !== undefined) return levenshteinCache[revKey];
+
   const matrix = [];
 
   for (let i = 0; i <= b.length; i++) {
@@ -26,8 +32,11 @@ function getLevenshteinDistance(a, b) {
     }
   }
 
-  return matrix[b.length][a.length];
+  const result = matrix[b.length][a.length];
+  levenshteinCache[key] = result;
+  return result;
 }
+
 
 // Shannon Entropy calculation for domain string
 function calculateShannonEntropy(str) {
