@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safe Preview Sandbox | PhishGuard</title>
+  <link rel="stylesheet" href="sandbox.css">
+</head>
+<body>
+  <div class="stars-overlay"></div>
+  
+  <div class="sandbox-container">
+    <!-- Browser mock header frame -->
+    <header class="sandbox-header">
+      <div class="browser-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="sandbox-title">
+        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="title-lock">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        Safe Preview Sandbox Explorer
+      </div>
+      <div class="window-actions">
+        <!-- Close / Back action -->
+        <button id="btn-close-sandbox" class="close-action-btn" title="Exit Sandbox">✕</button>
+      </div>
+    </header>
+
+    <!-- Mock Address Bar -->
+    <div class="sandbox-address-bar">
+      <span class="sandbox-status-lock">
+        <svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        Sandboxed
+      </span>
+      <input type="text" id="sandbox-address-input" readOnly value="http://detecting..." class="sandbox-address-input" />
+      <span id="sandbox-rating-badge" class="rating-badge safe">SAFE</span>
+    </div>
+
+    <!-- main Layout -->
+    <div class="sandbox-content-body">
+      <!-- Left Info Sidebar -->
+      <aside class="sandbox-sidebar">
+        <!-- SSL Card -->
+        <div class="sidebar-section">
+          <h4>
+            <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            SSL Status
+          </h4>
+          <div id="ssl-badge" class="sandbox-badge safe">Checking Certificate...</div>
+          <div id="ssl-details" class="ssl-details-text text-muted">
+            <!-- Filled dynamically -->
+          </div>
+        </div>
+
+        <!-- Structure Audit Card -->
+        <div class="sidebar-section">
+          <h4>
+            <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="11" y1="8" x2="11" y2="14"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+            Page Audit
+          </h4>
+          <ul class="sandbox-structure-list">
+            <li>
+              <span>Forms Found</span>
+              <span id="audit-forms">—</span>
+            </li>
+            <li>
+              <span>Password Inputs</span>
+              <span id="audit-password">NO</span>
+            </li>
+            <li>
+              <span>Ext. Submits</span>
+              <span id="audit-ext-submits">NO</span>
+            </li>
+            <li>
+              <span>Auto Redirects</span>
+              <span id="audit-redirects">NO</span>
+            </li>
+            <li>
+              <span>IP Address</span>
+              <span id="audit-ip">—</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Domain Score Card -->
+        <div class="sidebar-section">
+          <h4>
+            <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            Domain Score
+          </h4>
+          <div class="score-display">
+            <span id="score-val">100</span>
+            <span class="score-max">/100</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Panel Viewer -->
+      <main class="sandbox-viewer">
+        <!-- Tabs Nav -->
+        <nav class="sandbox-tabs-nav">
+          <button id="tab-btn-render" class="sandbox-tab-btn active">
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="2" y1="10" x2="22" y2="10"></line>
+              <line x1="6" y1="21" x2="18" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            Render View
+          </button>
+          <button id="tab-btn-html" class="sandbox-tab-btn">
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+            HTML Code
+          </button>
+          <button id="tab-btn-console" class="sandbox-tab-btn">
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="4 17 10 11 4 5"></polyline>
+              <line x1="12" y1="19" x2="20" y2="19"></line>
+            </svg>
+            Audit Console
+          </button>
+        </nav>
+
+        <!-- Viewports -->
+        <div class="sandbox-viewports">
+          <!-- Render View viewport -->
+          <div id="viewport-render" class="viewport-content">
+            <div class="sandbox-web-window">
+              <div class="sandbox-web-header">
+                <h3 id="sandbox-web-title">Title: Loading Page...</h3>
+              </div>
+              <div class="sandbox-web-content">
+                <p class="sandbox-warning-info-bar">
+                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                  Scripts, cookies, and external resources are disabled in this sandboxed view.
+                </p>
+                <div class="sandbox-render-preview">
+                  <!-- Render Placeholders loaded dynamically by JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HTML Code viewport -->
+          <div id="viewport-html" class="viewport-content hidden">
+            <div class="sandbox-code-editor">
+              <code id="html-code-lines">
+                <!-- Dynamically generated HTML code lines -->
+              </code>
+            </div>
+          </div>
+
+          <!-- Audit Console viewport -->
+          <div id="viewport-console" class="viewport-content hidden">
+            <div class="sandbox-console" id="console-logs">
+              <!-- Dynamically generated audit log lines -->
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="sandbox.js"></script>
+</body>
+</html>

@@ -1,6 +1,114 @@
-import modelWeights from './phishing_model_weights.json';
+// Phishing Detection Engine (ML + Heuristics)
+// Runs fully offline with zero external requests.
 
-// Levenshtein distance to check typosquatting (memoized for high performance)
+const modelWeights = {
+  "features": [
+    "url_length",
+    "domain_length",
+    "is_ip",
+    "tld_length",
+    "subdomain_count",
+    "is_https",
+    "letters",
+    "letter_ratio",
+    "digits",
+    "digit_ratio",
+    "special",
+    "special_ratio",
+    "equals_count",
+    "qmark_count",
+    "amp_count",
+    "hyphen_count",
+    "dots_count",
+    "slash_count",
+    "shannon_entropy",
+    "sensitive_words_count",
+    "is_shortened",
+    "is_suspicious_tld",
+    "is_typosquatting",
+    "brand_abuse_triggered"
+  ],
+  "weights": [
+    0.197894,
+    1.470395,
+    0.287978,
+    0.006417,
+    -0.762411,
+    0.791169,
+    0.444857,
+    -0.215907,
+    0.025833,
+    0.102017,
+    -0.922685,
+    0.247363,
+    0.332909,
+    -0.216133,
+    -0.096964,
+    -0.552863,
+    0.257791,
+    1.491433,
+    -0.323807,
+    0.129927,
+    0.036899,
+    0.627049,
+    0.008297,
+    0.127117
+  ],
+  "bias": 0.164736,
+  "means": {
+    "url_length": 62.9131,
+    "domain_length": 20.59727,
+    "is_ip": 0.005215,
+    "tld_length": 2.821825,
+    "subdomain_count": 0.75099,
+    "is_https": 0.45755,
+    "letters": 46.433865,
+    "letter_ratio": 0.768918,
+    "digits": 7.675435,
+    "digit_ratio": 0.073599,
+    "special": 8.8038,
+    "special_ratio": 0.157483,
+    "equals_count": 0.32629,
+    "qmark_count": 0.156645,
+    "amp_count": 0.14923,
+    "hyphen_count": 1.28197,
+    "dots_count": 2.273705,
+    "slash_count": 3.209805,
+    "shannon_entropy": 2.702479,
+    "sensitive_words_count": 0.22294,
+    "is_shortened": 0.00077,
+    "is_suspicious_tld": 0.05509,
+    "is_typosquatting": 0.00252,
+    "brand_abuse_triggered": 0.034175
+  },
+  "stds": {
+    "url_length": 82.389127,
+    "domain_length": 11.884164,
+    "is_ip": 0.072026,
+    "tld_length": 0.620176,
+    "subdomain_count": 0.991607,
+    "is_https": 0.498195,
+    "letters": 57.136987,
+    "letter_ratio": 0.102872,
+    "digits": 22.630328,
+    "digit_ratio": 0.104009,
+    "special": 10.510766,
+    "special_ratio": 0.046895,
+    "equals_count": 1.289575,
+    "qmark_count": 0.416818,
+    "amp_count": 0.846038,
+    "hyphen_count": 2.661164,
+    "dots_count": 3.492884,
+    "slash_count": 2.997498,
+    "shannon_entropy": 0.626925,
+    "sensitive_words_count": 1.994356,
+    "is_shortened": 0.027738,
+    "is_suspicious_tld": 0.228156,
+    "is_typosquatting": 0.050136,
+    "brand_abuse_triggered": 0.181678
+  }
+};
+
 const levenshteinCache = {};
 function getLevenshteinDistance(a, b) {
   const key = `${a}:${b}`;
@@ -9,11 +117,9 @@ function getLevenshteinDistance(a, b) {
   if (levenshteinCache[revKey] !== undefined) return levenshteinCache[revKey];
 
   const matrix = [];
-
   for (let i = 0; i <= b.length; i++) {
     matrix[i] = [i];
   }
-
   for (let j = 0; j <= a.length; j++) {
     matrix[0][j] = j;
   }
@@ -37,8 +143,6 @@ function getLevenshteinDistance(a, b) {
   return result;
 }
 
-
-// Shannon Entropy calculation for domain string
 function calculateShannonEntropy(str) {
   const len = str.length;
   if (len === 0) return 0;
@@ -54,18 +158,13 @@ function calculateShannonEntropy(str) {
     const p = freqs[char] / len;
     entropy -= p * Math.log2(p);
   }
-  
   return entropy;
 }
 
-// Extract features as expected by the Kaggle model
 export function extractModelFeatures(urlString) {
   const url = urlString.trim();
-  
-  // 1. is_https
   const is_https = /^https:\/\//i.test(url) ? 1 : 0;
   
-  // Parse host
   let host = '';
   try {
     let urlToParse = url;
@@ -82,16 +181,10 @@ export function extractModelFeatures(urlString) {
     host = host.split(':')[0];
   }
   
-  // 2. url_length
   const url_length = url.length;
-  
-  // 3. domain_length
   const domain_length = host.length;
-  
-  // 4. is_ip
   const is_ip = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(host) ? 1 : 0;
   
-  // 5. tld_length & subdomain_count
   let tld_length = 0;
   let subdomain_count = 0;
   if (host && !is_ip) {
@@ -102,7 +195,6 @@ export function extractModelFeatures(urlString) {
     }
   }
   
-  // Count character types in URL
   let letters = 0;
   let digits = 0;
   for (let i = 0; i < url.length; i++) {
@@ -115,7 +207,6 @@ export function extractModelFeatures(urlString) {
   }
   const special = url.length - letters - digits;
   
-  // Delimiter counts
   const equals_count = (url.match(/=/g) || []).length;
   const qmark_count = (url.match(/\?/g) || []).length;
   const amp_count = (url.match(/&/g) || []).length;
@@ -123,7 +214,6 @@ export function extractModelFeatures(urlString) {
   const dots_count = (url.match(/\./g) || []).length;
   const slash_count = (url.match(/\//g) || []).length;
   
-  // Ratios
   const letter_ratio = url_length > 0 ? letters / url_length : 0;
   const digit_ratio = url_length > 0 ? digits / url_length : 0;
   const special_ratio = url_length > 0 ? special / url_length : 0;
@@ -232,7 +322,6 @@ export function extractModelFeatures(urlString) {
   };
 }
 
-// Top brand names to check for typosquatting / hijacking
 const TOP_BRANDS = [
   'google.com', 'facebook.com', 'apple.com', 'microsoft.com', 
   'amazon.com', 'netflix.com', 'paypal.com', 'instagram.com', 
@@ -247,40 +336,24 @@ const SHORTENERS = [
   'buff.ly', 'adf.ly', 'bit.do', 'mcaf.ee', 'su.pr', 'rebrand.ly'
 ];
 
-// Detect IDN homograph attack
 function detectIDNHomograph(hostname) {
   if (!hostname) return null;
   const lowerHost = hostname.toLowerCase();
-  
-  // Punycode identifier
   const isPunycode = lowerHost.split('.').some(part => part.startsWith('xn--'));
   
-  // Character ranges (Cyrillic: \u0400-\u04FF, Greek: \u0370-\u03FF)
   const hasCyrillic = /[\u0400-\u04FF]/.test(lowerHost);
   const hasGreek = /[\u0370-\u03FF]/.test(lowerHost);
   const hasLatin = /[a-z0-9]/.test(lowerHost);
 
-  // Cyrillic lookalikes map to standard Latin characters
   const cyrillicToLatinMap = {
-    'а': 'a', // Cyrillic small letter a
-    'с': 'c', // Cyrillic small letter es
-    'е': 'e', // Cyrillic small letter ie
-    'ѕ': 's', // Cyrillic small letter dze
-    'і': 'i', // Cyrillic small letter byelorussian-ukrainian i
-    'ј': 'j', // Cyrillic small letter je
-    'о': 'o', // Cyrillic small letter o
-    'р': 'p', // Cyrillic small letter er
-    'у': 'y', // Cyrillic small letter u
-    'х': 'x', // Cyrillic small letter ha
-    'є': 'e', // Cyrillic small letter ukrainian ie
-    'ї': 'i'  // Cyrillic small letter yi
+    'а': 'a', 'с': 'c', 'е': 'e', 'ѕ': 's', 'і': 'i', 
+    'ј': 'j', 'о': 'o', 'р': 'p', 'у': 'y', 'х': 'x', 
+    'є': 'e', 'ї': 'i'
   };
 
   let decodedHost = lowerHost;
   
-  // If Punycode or mixed scripts (e.g. Cyrillic characters mixed with Latin)
   if (isPunycode || (hasCyrillic && hasLatin) || (hasGreek && hasLatin)) {
-    // Construct a visual "English lookalike representation"
     let replacement = '';
     let hasLookalikes = false;
     for (let i = 0; i < lowerHost.length; i++) {
@@ -298,14 +371,13 @@ function detectIDNHomograph(hostname) {
       type: isPunycode ? 'Punycode Obfuscation (IDN)' : 'Mixed-Script Homograph',
       lookalikeRepresentation: hasLookalikes ? replacement : null,
       explanation: isPunycode 
-        ? 'The domain is registered as an Internationalized Domain Name (Punycode). This is often used to hide characters from other alphabets that look exactly like English letters.'
+        ? 'The domain is registered in Punycode. This is often used to hide characters from other alphabets that look exactly like English letters.'
         : 'The domain mixes English characters with identical-looking Cyrillic or Greek characters. Real brands never mix character sets.'
     };
   }
   return null;
 }
 
-// Helper to extract the primary registered brand domain name (handling multi-part TLDs like .co.uk)
 function extractPrimaryDomainName(hostname) {
   if (!hostname) return '';
   const domainParts = hostname.replace(/^www\./, '').split('.');
@@ -324,8 +396,7 @@ function extractPrimaryDomainName(hostname) {
   }
 }
 
-// Perform complete security check (ML Model + Custom Heuristics)
-export function analyzeURL(urlString) {
+export function analyzeURL(urlString, localBlacklist = null) {
   const url = urlString.trim();
   
   if (!url) {
@@ -337,7 +408,6 @@ export function analyzeURL(urlString) {
     };
   }
 
-  // Parse URL components
   let parsedUrl = null;
   let hostname = '';
   let path = '';
@@ -347,7 +417,7 @@ export function analyzeURL(urlString) {
   try {
     let urlToParse = url;
     if (!/^https?:\/\//i.test(urlToParse)) {
-      urlToParse = 'https://' + urlToParse; // Default to HTTPS for parsing
+      urlToParse = 'https://' + urlToParse;
     }
     parsedUrl = new URL(urlToParse);
     hostname = parsedUrl.hostname.toLowerCase();
@@ -358,20 +428,59 @@ export function analyzeURL(urlString) {
     path = url.substring(hostname.length);
   }
 
-  // 1. Whitelist Check (Instantly Safe)
+  const hasHttps = /^https:/i.test(protocol || url);
+
+  // 1. Active Threat Intelligence Database Lookup (Instant Danger)
+  if (localBlacklist) {
+    const isBlacklisted = (localBlacklist instanceof Set)
+      ? localBlacklist.has(hostname)
+      : localBlacklist.includes(hostname);
+
+    if (isBlacklisted) {
+      return {
+        isValid: true,
+        url,
+        domain: hostname,
+        score: 0,
+        riskScore: 100,
+        rating: 'DANGEROUS',
+        mlProbability: 1.00,
+        warnings: [{
+          id: 'threat_blacklist',
+          title: 'Threat Intel Match',
+          desc: 'This domain is listed on active threat intelligence database blacklists. Extremely high risk.',
+          severity: 'high',
+          value: 100
+        }],
+        safeIndicators: [],
+        features: extractModelFeatures(url),
+        breakdown: {
+          protocol: { text: protocol ? protocol.replace(':', '') : (hasHttps ? 'https' : 'http'), isSafe: hasHttps },
+          hostname: hostname,
+          subdomains: hostname.replace(/^www\./, '').split('.').slice(0, -2).filter(Boolean),
+          primaryDomainName: extractPrimaryDomainName(hostname),
+          path: path,
+          isIpAddress: false,
+          isShortened: false,
+          typosquatTarget: null,
+          brandAbuseTriggered: false,
+          blacklisted: true
+        }
+      };
+    }
+  }
+
+  // 2. Whitelist Check (Instantly Safe)
   const isWhitelisted = TOP_BRANDS.some(brand => {
-    // Matches exact domain or subdomains: e.g. "google.com" or "accounts.google.com"
     return hostname === brand || hostname.endsWith('.' + brand);
   });
-
-  const hasHttps = /^https:/i.test(protocol || url);
 
   if (isWhitelisted && hasHttps) {
     return {
       isValid: true,
       url,
       domain: hostname,
-      score: 100, // 100% safe
+      score: 100,
       riskScore: 0,
       rating: 'SAFE',
       mlProbability: 0.0,
@@ -395,12 +504,11 @@ export function analyzeURL(urlString) {
     };
   }
 
-  // 2. Extract features & Calculate Normalized ML Model Prediction
+  // 3. Extract features & Calculate ML prediction
   const features = extractModelFeatures(url);
   
   let z = modelWeights.bias;
   modelWeights.features.forEach((feat, idx) => {
-    // Standardize: (x - mean) / std
     const mean = modelWeights.means[feat] || 0;
     const std = modelWeights.stds[feat] || 1;
     const norm_val = (features[feat] - mean) / std;
@@ -409,17 +517,17 @@ export function analyzeURL(urlString) {
   
   const mlProbability = 1 / (1 + Math.exp(-z));
   
-  // 3. Custom Heuristics Analysis
+  // 4. Heuristics Analysis
   const warnings = [];
   const safeIndicators = [];
-  let riskScore = 0; // 0 is safe, 100 is dangerous
+  let riskScore = 0;
 
-  // Heuristics Check 1: HTTPS Check
+  // HTTP warning
   if (!hasHttps) {
     warnings.push({
       id: 'no_https',
       title: 'Insecure Connection (HTTP)',
-      desc: 'The website does not use SSL/HTTPS encryption. Phishing sites often use HTTP, although many now use free SSL certificates.',
+      desc: 'The website does not use SSL/HTTPS encryption. Phishing sites often use HTTP to avoid verification.',
       severity: 'medium',
       value: 20
     });
@@ -428,52 +536,56 @@ export function analyzeURL(urlString) {
     safeIndicators.push('SSL/HTTPS connection is active (encrypted).');
   }
 
-  // Heuristics Check 2: IP Address as host
+  // IP Address Domain
   const ipPattern = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
   if (ipPattern.test(hostname)) {
     isIpAddress = true;
     warnings.push({
       id: 'ip_address',
       title: 'IP Address Used as Domain',
-      desc: 'The URL uses an IP address instead of a friendly domain name. This is a very common phishing tactic to hide identity.',
+      desc: 'The URL uses a numerical IP address instead of a standard domain name. This is a common indicator of a phishing server.',
       severity: 'high',
       value: 35
     });
     riskScore += 35;
   }
 
-  // Heuristics Check 3: Shortening Service
+  // Shortening Service
   const isShortened = SHORTENERS.some(shortener => hostname === shortener || hostname.endsWith('.' + shortener));
   if (isShortened) {
     warnings.push({
       id: 'shortener',
       title: 'URL Shortening Service Detected',
-      desc: 'Uses a link shortener service. Phishing messages use these to hide the actual landing page.',
+      desc: 'Uses a link shortener service. Attackers often use these to hide the malicious destination URL.',
       severity: 'medium',
       value: 20
     });
     riskScore += 20;
   }
 
-  // Heuristics Check 4: Typosquatting / Homograph / Brand Abuse
+  // Typosquatting / Homograph / Brand Abuse (Enhanced to parse subdomains separately)
   let typosquatTarget = null;
   let minDistance = 999;
   let brandAbuseTriggered = false;
   
   if (!isIpAddress && hostname) {
     const primaryName = extractPrimaryDomainName(hostname);
+    const hostParts = hostname.replace(/^www\./, '').split('.');
 
-    // Check if the domain contains a brand name but is NOT the brand's official site
     TOP_BRANDS.forEach(brand => {
       const brandRaw = brand.split('.')[0];
-      // If it contains the brand name (e.g. 'paypal' in 'secure-paypal-login.com')
-      if (hostname.includes(brandRaw) && !hostname.endsWith('.' + brand) && hostname !== brand) {
-        brandAbuseTriggered = true;
-        typosquatTarget = brand;
+      const isOfficial = hostname === brand || hostname.endsWith('.' + brand);
+      
+      if (!isOfficial) {
+        // Look for brand name embedded anywhere inside hostname parts
+        const hasBrandMatch = hostParts.some(part => part === brandRaw || part.includes(brandRaw));
+        if (hasBrandMatch) {
+          brandAbuseTriggered = true;
+          typosquatTarget = brand;
+        }
       }
     });
 
-    // If brand hijacking didn't trigger, check Levenshtein distance on the primary domain name
     if (!brandAbuseTriggered) {
       TOP_BRANDS.forEach(brand => {
         const brandRaw = brand.split('.')[0];
@@ -491,8 +603,8 @@ export function analyzeURL(urlString) {
 
     if (typosquatTarget) {
       const desc = brandAbuseTriggered 
-        ? `The domain contains the brand name '${typosquatTarget.split('.')[0]}' but is not the official brand website. This is a common tactic to hijack brand trust.` 
-        : `The domain name closely mimics a highly visited website (${typosquatTarget}). This is a major phishing technique (typosquatting).`;
+        ? `The domain contains the brand name '${typosquatTarget.split('.')[0]}' but is not the official brand website.` 
+        : `The domain name closely mimics a highly visited website (${typosquatTarget}). This is a major typosquatting sign.`;
       
       warnings.push({
         id: 'typosquatting',
@@ -505,23 +617,13 @@ export function analyzeURL(urlString) {
     }
   }
 
-  // Heuristics Check 5: Sensitive Keywords in host or path
+  // Sensitive Keywords in host or path
   const sensitiveKeywords = ['login', 'signin', 'secure', 'verify', 'update', 'banking', 'account', 'wallet', 'auth', 'recovery', 'free', 'gift', 'prize', 'credential'];
   const matchedKeywords = [];
   
-  // Check hostname (both subdomains and primary domain)
   sensitiveKeywords.forEach(kw => {
-    if (hostname.includes(kw)) {
+    if (hostname.includes(kw) || path.toLowerCase().includes(kw)) {
       matchedKeywords.push(kw);
-    }
-  });
-  
-  // Check path for sensitive keywords
-  sensitiveKeywords.forEach(kw => {
-    if (path.toLowerCase().includes(kw)) {
-      if (!matchedKeywords.includes(kw)) {
-        matchedKeywords.push(kw);
-      }
     }
   });
 
@@ -529,14 +631,14 @@ export function analyzeURL(urlString) {
     warnings.push({
       id: 'keywords',
       title: 'Suspicious Keywords Detected',
-      desc: `Contains security or urgency keywords (${matchedKeywords.join(', ')}) designed to trick you into entering credentials.`,
+      desc: `Contains security or urgency keywords (${matchedKeywords.join(', ')}) designed to capture credentials.`,
       severity: 'medium',
       value: 15 * Math.min(matchedKeywords.length, 3)
     });
     riskScore += 15 * Math.min(matchedKeywords.length, 3);
   }
 
-  // Heuristics Check 6: Shannon Entropy Check (random characters)
+  // Shannon Entropy Check (random characters)
   if (!isIpAddress && hostname) {
     const primaryName = extractPrimaryDomainName(hostname);
     const entropy = calculateShannonEntropy(primaryName);
@@ -545,7 +647,7 @@ export function analyzeURL(urlString) {
       warnings.push({
         id: 'high_entropy',
         title: 'High Randomness in Domain Name',
-        desc: `The domain name contains highly random characters (Entropy: ${entropy.toFixed(2)}), suggesting it was auto-generated by a script.`,
+        desc: `The domain name contains highly random characters (Entropy: ${entropy.toFixed(2)}), suggesting script generation.`,
         severity: 'medium',
         value: 15
       });
@@ -553,32 +655,32 @@ export function analyzeURL(urlString) {
     }
   }
 
-  // Heuristics Check 7: Too many subdomains / dots
+  // Too many subdomains
   const dotCount = (hostname.match(/\./g) || []).length;
   if (dotCount > 3) {
     warnings.push({
       id: 'many_subdomains',
       title: 'Excessive Subdomains',
-      desc: 'The URL has an unusually high number of subdomains. Attackers stack subdomains to make fake URLs look authentic.',
+      desc: 'The URL has an unusually high number of subdomains, which can be used to hide the primary host.',
       severity: 'medium',
       value: 15
     });
     riskScore += 15;
   }
 
-  // Heuristics Check 8: @ symbol in URL
+  // @ symbol in URL
   if (url.includes('@')) {
     warnings.push({
       id: 'at_symbol',
       title: 'Contains "@" Symbol',
-      desc: 'The "@" symbol in a URL causes the browser to ignore everything before it. Attackers use this to display fake domain names.',
+      desc: 'The "@" symbol in a URL causes browsers to ignore everything preceding it, a common spoofing tactic.',
       severity: 'high',
       value: 30
     });
     riskScore += 30;
   }
 
-  // Heuristics Check 9: IDN Homograph Attack Check
+  // IDN Homograph Attack
   const homographResult = detectIDNHomograph(hostname);
   if (homographResult) {
     warnings.push({
@@ -591,7 +693,7 @@ export function analyzeURL(urlString) {
     riskScore += 60;
   }
 
-  // Heuristics Check 10: Suspicious Top-Level Domains (TLDs)
+  // Suspicious TLDs
   const SUSPICIOUS_TLDS = [
     'zip', 'mov', 'fit', 'top', 'tk', 'ml', 'ga', 'cf', 'gq', 'work', 
     'click', 'download', 'racing', 'stream', 'win', 'bid', 'vip', 'xyz',
@@ -604,7 +706,7 @@ export function analyzeURL(urlString) {
       warnings.push({
         id: 'suspicious_tld',
         title: `Suspicious TLD (.${tld})`,
-        desc: `The Top-Level Domain '.${tld}' is frequently used for malicious activities, phishing, and distributing malware.`,
+        desc: `The Top-Level Domain '.${tld}' is frequently associated with malicious operations.`,
         severity: 'medium',
         value: 20
       });
@@ -612,26 +714,28 @@ export function analyzeURL(urlString) {
     }
   }
 
-  // Calculate final score
-  // If no major threat warnings are present, we bound the prediction.
-  // We integrate the normalized ML prediction with the custom risk score.
   const mlScore = Math.round(mlProbability * 100);
   
-  // Combine logic:
-  // If the ML score is high and we have warning flags, they amplify each other.
-  // If there are no warning flags and it's a standard URL structure, we damp the ML score.
-  let finalScore = 0;
-  if (warnings.length > 0) {
-    finalScore = Math.max(riskScore, mlScore);
-  } else {
-    // Damp the ML score if no heuristics triggered and it didn't flag keywords/typosquatting
-    finalScore = Math.min(mlScore, 20); // Cap at 20 (Safe) if no warnings triggered
+  // Smart Hybrid Score Calibration (Ensemble)
+  let finalScore = Math.round((mlScore * 0.6) + (riskScore * 0.4));
+
+  const hasHighSeverityWarning = warnings.some(w => 
+    w.id === 'typosquatting' || 
+    w.id === 'homograph_attack' || 
+    w.id === 'at_symbol' || 
+    w.id === 'ip_address'
+  );
+
+  if (hasHighSeverityWarning) {
+    finalScore = Math.max(finalScore, 75);
+  } else if (mlScore > 90) {
+    finalScore = Math.max(finalScore, 60);
+  } else if (warnings.length === 0) {
+    finalScore = Math.min(finalScore, 25);
   }
 
-  // Cap finalScore at 100 and min at 0
   finalScore = Math.min(Math.max(finalScore, 0), 100);
 
-  // Safety rating calculation
   let rating = 'SAFE';
   if (finalScore >= 70) {
     rating = 'DANGEROUS';
@@ -648,13 +752,13 @@ export function analyzeURL(urlString) {
     isValid: true,
     url,
     domain: hostname,
-    score: 100 - finalScore, // Safety score is 100 - risk
+    score: 100 - finalScore,
     riskScore: finalScore,
     rating,
     mlProbability: parseFloat(mlProbability.toFixed(4)),
     warnings,
     safeIndicators,
-    features, // Expose raw extracted features for details UI
+    features,
     breakdown: {
       protocol: {
         text: protocol ? protocol.replace(':', '') : (hasHttps ? 'https' : 'http'),
@@ -669,190 +773,5 @@ export function analyzeURL(urlString) {
       typosquatTarget: typosquatTarget,
       brandAbuseTriggered: brandAbuseTriggered
     }
-  };
-}
-
-// Perform Email Header analysis
-export function analyzeEmailHeaders(rawHeaders) {
-  if (!rawHeaders || !rawHeaders.trim()) {
-    return {
-      isValid: false,
-      score: 100,
-      warnings: ['Please enter email headers to analyze.']
-    };
-  }
-
-  const lines = rawHeaders.split('\n');
-  const headers = {};
-  
-  // Simple multi-line header parser
-  let currentHeader = null;
-  lines.forEach(line => {
-    if (line.startsWith(' ') || line.startsWith('\t')) {
-      if (currentHeader) {
-        headers[currentHeader] += ' ' + line.trim();
-      }
-    } else {
-      const match = line.match(/^([A-Za-z0-9\-]+):\s*(.*)$/);
-      if (match) {
-        currentHeader = match[1].toLowerCase();
-        headers[currentHeader] = match[2].trim();
-      }
-    }
-  });
-
-  const warnings = [];
-  const safeIndicators = [];
-  let riskScore = 0;
-
-  // Extract critical headers
-  const fromHeader = headers['from'] || '';
-  const returnPathHeader = headers['return-path'] || '';
-  const replyToHeader = headers['reply-to'] || '';
-  const authResults = headers['authentication-results'] || '';
-  const receivedSpf = headers['received-spf'] || '';
-  const subject = headers['subject'] || '';
-  const messageId = headers['message-id'] || '';
-
-  // 1. From & Return-Path Domain Discrepancy
-  const fromEmailMatch = fromHeader.match(/<([^>]+)>/) || fromHeader.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-  const fromEmail = fromEmailMatch ? fromEmailMatch[1] : '';
-  const fromDomain = fromEmail ? fromEmail.split('@')[1]?.toLowerCase() : '';
-
-  const returnPathEmailMatch = returnPathHeader.match(/<([^>]+)>/) || returnPathHeader.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-  const returnPathEmail = returnPathEmailMatch ? returnPathEmailMatch[1] : '';
-  const returnPathDomain = returnPathEmail ? returnPathEmail.split('@')[1]?.toLowerCase() : '';
-
-  if (fromDomain && returnPathDomain && fromDomain !== returnPathDomain) {
-    warnings.push({
-      id: 'domain_discrepancy',
-      title: 'Sender Domain Discrepancy',
-      desc: `The email claims to be from '${fromDomain}', but the return envelope path points to '${returnPathDomain}'. This indicates potential sender spoofing.`,
-      severity: 'high',
-      value: 35
-    });
-    riskScore += 35;
-  }
-
-  // 2. SPF Check
-  let spfStatus = 'NONE';
-  if (/spf=pass/i.test(authResults) || /pass/i.test(receivedSpf)) {
-    spfStatus = 'PASS';
-    safeIndicators.push('SPF Authentication passed (authorized sending server).');
-  } else if (/spf=fail/i.test(authResults) || /fail/i.test(receivedSpf)) {
-    spfStatus = 'FAIL';
-    warnings.push({
-      id: 'spf_fail',
-      title: 'SPF Verification Failed',
-      desc: 'The sending mail server is not authorized by the domain owner to send emails. High chance of spoofing.',
-      severity: 'high',
-      value: 40
-    });
-    riskScore += 40;
-  } else if (/spf=softfail/i.test(authResults)) {
-    spfStatus = 'SOFTFAIL';
-    warnings.push({
-      id: 'spf_softfail',
-      title: 'SPF Verification Soft-Failed',
-      desc: 'The sending server is not fully authorized, but the domain owner policy is lenient.',
-      severity: 'medium',
-      value: 15
-    });
-    riskScore += 15;
-  }
-
-  // 3. DKIM Check
-  let dkimStatus = 'NONE';
-  if (/dkim=pass/i.test(authResults)) {
-    dkimStatus = 'PASS';
-    safeIndicators.push('DKIM Signature is valid (email contents unaltered).');
-  } else if (/dkim=fail/i.test(authResults)) {
-    dkimStatus = 'FAIL';
-    warnings.push({
-      id: 'dkim_fail',
-      title: 'DKIM Signature Invalid',
-      desc: 'DKIM cryptographical signature failed verification. The email content might have been modified in transit.',
-      severity: 'high',
-      value: 30
-    });
-    riskScore += 30;
-  }
-
-  // 4. DMARC Check
-  let dmarcStatus = 'NONE';
-  if (/dmarc=pass/i.test(authResults)) {
-    dmarcStatus = 'PASS';
-    safeIndicators.push('DMARC policy alignment check passed.');
-  } else if (/dmarc=fail/i.test(authResults)) {
-    dmarcStatus = 'FAIL';
-    warnings.push({
-      id: 'dmarc_fail',
-      title: 'DMARC Alignment Failed',
-      desc: 'The email failed DMARC compliance, which checks if SPF/DKIM align with the "From" header.',
-      severity: 'high',
-      value: 35
-    });
-    riskScore += 35;
-  }
-
-  // 5. Subject Urgency / Phishing Keywords Check
-  const urgentKeywords = ['suspend', 'block', 'action required', 'urgent', 'verify', 'update', 'billing', 'security alert', 'unauthorized', 'reset password', 'account closed', 'invoice'];
-  const matchedSpamKeywords = [];
-  urgentKeywords.forEach(kw => {
-    if (subject.toLowerCase().includes(kw)) {
-      matchedSpamKeywords.push(kw);
-    }
-  });
-
-  if (matchedSpamKeywords.length > 0) {
-    warnings.push({
-      id: 'subject_urgency',
-      title: 'Urgent/Suspicious Subject Line',
-      desc: `Contains urgency or security-alert keywords (${matchedSpamKeywords.join(', ')}), a common trigger for social engineering.`,
-      severity: 'medium',
-      value: 15
-    });
-    riskScore += 15;
-  }
-
-  // 6. Generic headers check
-  if (!fromHeader) {
-    warnings.push({
-      id: 'no_from',
-      title: 'Missing "From" Header',
-      desc: 'No sender address could be found in the headers.',
-      severity: 'medium',
-      value: 20
-    });
-    riskScore += 20;
-  }
-
-  // Calculate safety score (100 - riskScore)
-  const finalScore = Math.max(0, Math.min(100, 100 - riskScore));
-  let rating = 'SAFE';
-  if (finalScore < 40) {
-    rating = 'DANGEROUS';
-  } else if (finalScore < 75) {
-    rating = 'SUSPICIOUS';
-  }
-
-  if (warnings.length === 0) {
-    safeIndicators.push('All sender details and cryptographic signatures are consistent.');
-  }
-
-  return {
-    isValid: true,
-    from: fromHeader || 'Unknown Sender',
-    subject: subject || '(No Subject)',
-    date: headers['date'] || 'Unknown Date',
-    fromDomain,
-    returnPathDomain,
-    spfStatus,
-    dkimStatus,
-    dmarcStatus,
-    score: finalScore,
-    rating,
-    warnings,
-    safeIndicators
   };
 }

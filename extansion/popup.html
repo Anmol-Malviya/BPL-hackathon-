@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhishGuard Shield</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-wrapper">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <path d="M12 8v4"></path>
+          <path d="M12 16h.01"></path>
+        </svg>
+        <span class="brand-name">PhishGuard</span>
+      </div>
+      <div class="badge-status-container">
+        <span id="shield-active-badge" class="badge-status active">SHIELD ON</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content">
+      <!-- Status Card -->
+      <section class="card status-card">
+        <div class="status-header">
+          <span class="section-title">Current Tab Security</span>
+          <span id="domain-text" class="tab-domain">Detecting...</span>
+        </div>
+
+        <div class="gauge-container">
+          <svg class="progress-ring" width="120" height="120">
+            <circle class="progress-ring-bg" stroke="rgba(255,255,255,0.03)" stroke-width="8" fill="transparent" r="50" cx="60" cy="60"/>
+            <circle id="progress-ring-fill" class="progress-ring-fill" stroke="var(--color-safe)" stroke-width="8" stroke-dasharray="314.159" stroke-dashoffset="314.159" stroke-linecap="round" fill="transparent" r="50" cx="60" cy="60"/>
+          </svg>
+          <div class="gauge-center">
+            <span id="score-text" class="score-value">--</span>
+            <span class="score-label">SAFE</span>
+          </div>
+        </div>
+
+        <div id="status-badge-container" class="status-badge-container">
+          <span id="status-rating-badge" class="rating-badge safe">SAFE SITE</span>
+        </div>
+
+        <div id="quick-diagnosis" class="quick-diagnosis text-muted">
+          Analyzing URL lexical properties...
+        </div>
+
+        <button id="btn-open-sandbox" class="btn-clear text-secondary hidden" style="margin-top: 8px; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; opacity:0.8;">
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="2" y1="10" x2="22" y2="10"></line>
+            <line x1="6" y1="21" x2="18" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          Preview in Safe Sandbox
+        </button>
+      </section>
+
+      <!-- Warnings/Flags list (collapsible or dynamic list) -->
+      <section id="warnings-card" class="card warnings-card hidden">
+        <div class="card-header">
+          <span class="card-header-title text-danger">Threat Indicators</span>
+          <span id="warnings-count" class="badge-count">0</span>
+        </div>
+        <ul id="popup-warnings-list" class="popup-warnings-list">
+          <!-- Populated by JS -->
+        </ul>
+      </section>
+
+      <!-- Stats section -->
+      <section class="stats-row">
+        <div class="card stat-box">
+          <span class="stat-num" id="stat-scanned">0</span>
+          <span class="stat-label">Links Scanned</span>
+        </div>
+        <div class="card stat-box">
+          <span class="stat-num text-danger" id="stat-blocked">0</span>
+          <span class="stat-label">Threats Blocked</span>
+        </div>
+      </section>
+
+      <!-- Protection Toggles -->
+      <section class="card settings-card">
+        <span class="section-title">Shield Options</span>
+        
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-title">Enable Real-Time Shielding</span>
+            <span class="setting-desc">Blocks phishing attempts automatically</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggle-shielding" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-title">Block Suspicious Sites</span>
+            <span class="setting-desc">Extends blocks to moderate risk links</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggle-suspicious">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Bypassed Sites Whitelist -->
+      <section id="whitelist-card" class="card whitelist-card hidden">
+        <div class="whitelist-header">
+          <span class="section-title">Whitelisted This Session</span>
+          <button id="btn-clear-whitelist" class="btn-clear">Clear All</button>
+        </div>
+        <ul id="whitelist-list" class="whitelist-list">
+          <!-- Populated by JS -->
+        </ul>
+      </section>
+
+      <!-- Threat Database Sync Card -->
+      <section class="card sync-card">
+        <div class="sync-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="section-title">Threat Intel Database</span>
+          <button id="btn-sync-intel" class="btn-clear" style="color: var(--color-secondary); font-size: 10px; font-weight: 700; text-transform: uppercase;">Sync Rules</button>
+        </div>
+        <div class="sync-info-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(5,3,16,0.3); padding: 8px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+          <div class="sync-info-item" style="display: flex; flex-direction: column; align-items: center;">
+            <span id="sync-rules-count" class="sync-val" style="font-family: var(--font-mono); font-size: 14px; font-weight: 800;">0</span>
+            <span class="sync-label" style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase; margin-top: 2px;">Local Rules</span>
+          </div>
+          <div class="sync-info-item" style="display: flex; flex-direction: column; align-items: center;">
+            <span id="sync-time-text" class="sync-val" style="font-size: 10.5px; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">Never</span>
+            <span class="sync-label" style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase; margin-top: 2px;">Last Updated</span>
+          </div>
+        </div>
+        <div id="sync-status" class="sync-status text-muted" style="font-size: 10px; text-align: center;">
+          Local threat intelligence database loaded.
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>Running locally & offline</span>
+      <span class="engine-ver">Engine v2.0</span>
+    </footer>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

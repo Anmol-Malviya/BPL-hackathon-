@@ -216,70 +216,144 @@ object PhishingEngine {
         val dotsCount = countOccurrences(rawUrl, ".").toDouble()
         val slashCount = countOccurrences(rawUrl, "/").toDouble()
 
+        // Heuristics Checks & Feature Preparation
+        val isIpAddress = isIp == 1.0
+
+        val primaryName = if (!isIpAddress && hostname.isNotEmpty()) extractPrimaryDomainName(hostname) else ""
+
+        val shannonEntropyVal = if (hostname.isNotEmpty() && !isIpAddress) {
+            calculateShannonEntropy(primaryName)
+        } else {
+            0.0
+        }
+
+        var sensitiveWordsCount = 0
+        val lowerUrl = rawUrl.lowercase()
+        for (word in SENSITIVE_WORDS) {
+            sensitiveWordsCount += countOccurrences(lowerUrl, word)
+        }
+        val sensitiveWordsCountVal = sensitiveWordsCount.toDouble()
+
+        val isShort = SHORTENERS.any { sh -> hostname == sh || hostname.endsWith(".$sh") }
+        val isShortVal = if (isShort) 1.0 else 0.0
+
+        val isSuspiciousTldVal = if (hostname.isNotEmpty() && !isIpAddress && SUSPICIOUS_TLDS.contains(hostname.split(".").last())) 1.0 else 0.0
+
+        var typosquatTarget: String? = null
+        var brandAbuse = false
+        if (!isIpAddress && hostname.isNotEmpty()) {
+            val hostParts = hostname.replace(Regex("^www\\."), "").split(".")
+
+            // Contains Brand Name?
+            for (brand in TOP_BRANDS) {
+                val brandRaw = brand.split(".").first()
+                if (hostname.contains(brandRaw) && !hostname.endsWith(".$brand") && hostname != brand) {
+                    brandAbuse = true
+                    typosquatTarget = brand
+                    break
+                }
+            }
+
+            // Closely resembles brand (Levenshtein check)?
+            if (!brandAbuse) {
+                var minDistance = 999
+                for (brand in TOP_BRANDS) {
+                    val brandRaw = brand.split(".").first()
+                    if (primaryName != brandRaw) {
+                        val dist = getLevenshteinDistance(primaryName, brandRaw)
+                        if (dist in 1..2 && dist < minDistance) {
+                            minDistance = dist
+                            typosquatTarget = brand
+                        }
+                    }
+                }
+            }
+        }
+        val isTyposquattingVal = if (typosquatTarget != null && !brandAbuse) 1.0 else 0.0
+        val brandAbuseTriggeredVal = if (brandAbuse) 1.0 else 0.0
+
         // ML normalization parameters (from phishing_model_weights.json)
         val means = mapOf(
-            "url_length" to 62.64702,
-            "domain_length" to 20.65147,
-            "is_ip" to 0.00527,
-            "tld_length" to 2.82428,
-            "subdomain_count" to 0.75429,
-            "is_https" to 0.457375,
-            "letters" to 46.24318,
-            "letter_ratio" to 0.769156,
-            "digits" to 7.64757,
-            "digit_ratio" to 0.073534,
-            "special" to 8.75627,
-            "special_ratio" to 0.157309,
-            "equals_count" to 0.32242,
-            "qmark_count" to 0.1569,
-            "amp_count" to 0.14655,
-            "hyphen_count" to 1.27194,
-            "dots_count" to 2.25694,
-            "slash_count" to 3.195345
+            "url_length" to 62.9131,
+            "domain_length" to 20.59727,
+            "is_ip" to 0.005215,
+            "tld_length" to 2.821825,
+            "subdomain_count" to 0.75099,
+            "is_https" to 0.45755,
+            "letters" to 46.433865,
+            "letter_ratio" to 0.768918,
+            "digits" to 7.675435,
+            "digit_ratio" to 0.073599,
+            "special" to 8.8038,
+            "special_ratio" to 0.157483,
+            "equals_count" to 0.32629,
+            "qmark_count" to 0.156645,
+            "amp_count" to 0.14923,
+            "hyphen_count" to 1.28197,
+            "dots_count" to 2.273705,
+            "slash_count" to 3.209805,
+            "shannon_entropy" to 2.702479,
+            "sensitive_words_count" to 0.22294,
+            "is_shortened" to 0.00077,
+            "is_suspicious_tld" to 0.05509,
+            "is_typosquatting" to 0.00252,
+            "brand_abuse_triggered" to 0.034175
         )
 
         val stds = mapOf(
-            "url_length" to 81.563023,
-            "domain_length" to 12.021806,
-            "is_ip" to 0.072403,
-            "tld_length" to 0.623532,
-            "subdomain_count" to 1.004871,
-            "is_https" to 0.49818,
-            "letters" to 56.563279,
-            "letter_ratio" to 0.103042,
-            "digits" to 22.51204,
-            "digit_ratio" to 0.104149,
-            "special" to 10.015636,
-            "special_ratio" to 0.046629,
-            "equals_count" to 1.196225,
-            "qmark_count" to 0.420919,
-            "amp_count" to 0.811753,
-            "hyphen_count" to 2.579973,
-            "dots_count" to 2.527978,
-            "slash_count" to 2.837436
+            "url_length" to 82.389127,
+            "domain_length" to 11.884164,
+            "is_ip" to 0.072026,
+            "tld_length" to 0.620176,
+            "subdomain_count" to 0.991607,
+            "is_https" to 0.498195,
+            "letters" to 57.136987,
+            "letter_ratio" to 0.102872,
+            "digits" to 22.630328,
+            "digit_ratio" to 0.104009,
+            "special" to 10.510766,
+            "special_ratio" to 0.046895,
+            "equals_count" to 1.289575,
+            "qmark_count" to 0.416818,
+            "amp_count" to 0.846038,
+            "hyphen_count" to 2.661164,
+            "dots_count" to 3.492884,
+            "slash_count" to 2.997498,
+            "shannon_entropy" to 0.626925,
+            "sensitive_words_count" to 1.994356,
+            "is_shortened" to 0.027738,
+            "is_suspicious_tld" to 0.228156,
+            "is_typosquatting" to 0.050136,
+            "brand_abuse_triggered" to 0.181678
         )
 
         val weights = mapOf(
-            "url_length" to 0.246727,
-            "domain_length" to 1.290708,
-            "is_ip" to 0.30906,
-            "tld_length" to -0.060252,
-            "subdomain_count" to -0.601058,
-            "is_https" to 0.718823,
-            "letters" to 0.528222,
-            "letter_ratio" to -0.295592,
-            "digits" to -0.020908,
-            "digit_ratio" to 0.123457,
-            "special" to -0.926901,
-            "special_ratio" to 0.377459,
-            "equals_count" to 0.263368,
-            "qmark_count" to -0.188277,
-            "amp_count" to -0.083359,
-            "hyphen_count" to -0.52866,
-            "dots_count" to 0.158269,
-            "slash_count" to 1.370667
+            "url_length" to 0.197894,
+            "domain_length" to 1.470395,
+            "is_ip" to 0.287978,
+            "tld_length" to 0.006417,
+            "subdomain_count" to -0.762411,
+            "is_https" to 0.791169,
+            "letters" to 0.444857,
+            "letter_ratio" to -0.215907,
+            "digits" to 0.025833,
+            "digit_ratio" to 0.102017,
+            "special" to -0.922685,
+            "special_ratio" to 0.247363,
+            "equals_count" to 0.332909,
+            "qmark_count" to -0.216133,
+            "amp_count" to -0.096964,
+            "hyphen_count" to -0.552863,
+            "dots_count" to 0.257791,
+            "slash_count" to 1.491433,
+            "shannon_entropy" to -0.323807,
+            "sensitive_words_count" to 0.129927,
+            "is_shortened" to 0.036899,
+            "is_suspicious_tld" to 0.627049,
+            "is_typosquatting" to 0.008297,
+            "brand_abuse_triggered" to 0.127117
         )
-        val bias = 0.086256
+        val bias = 0.164736
 
         // Predict Z-score
         var z = bias
@@ -289,7 +363,13 @@ object PhishingEngine {
             "letters" to letters.toDouble(), "letter_ratio" to letterRatio, "digits" to digits.toDouble(),
             "digit_ratio" to digitRatio, "special" to special.toDouble(), "special_ratio" to specialRatio,
             "equals_count" to equalsCount, "qmark_count" to qmarkCount, "amp_count" to ampCount,
-            "hyphen_count" to hyphenCount, "dots_count" to dotsCount, "slash_count" to slashCount
+            "hyphen_count" to hyphenCount, "dots_count" to dotsCount, "slash_count" to slashCount,
+            "shannon_entropy" to shannonEntropyVal,
+            "sensitive_words_count" to sensitiveWordsCountVal,
+            "is_shortened" to isShortVal,
+            "is_suspicious_tld" to isSuspiciousTldVal,
+            "is_typosquatting" to isTyposquattingVal,
+            "brand_abuse_triggered" to brandAbuseTriggeredVal
         )
 
         for ((feat, value) in features) {
@@ -315,79 +395,37 @@ object PhishingEngine {
         }
 
         // Heuristics 2: IP Address in Hostname
-        val isIpAddress = isIp == 1.0
         if (isIpAddress) {
             warnings.add("• IP Domain: Uses raw numerical IP address instead of domain name.")
             riskScore += 35
         }
 
         // Heuristics 3: URL Shortener
-        val isShort = SHORTENERS.any { sh -> hostname == sh || hostname.endsWith(".$sh") }
-        if (isShort) {
+        if (isShortVal == 1.0) {
             warnings.add("• Masked Link: Uses a link shortener to hide destination website.")
             riskScore += 20
         }
 
         // Heuristics 4: Typosquatting & Brand Spoofing
-        if (!isIpAddress && hostname.isNotEmpty()) {
-            val primaryName = extractPrimaryDomainName(hostname)
-            var typosquatTarget: String? = null
-            var brandAbuse = false
-
-            // Contains Brand Name?
-            for (brand in TOP_BRANDS) {
-                val brandRaw = brand.split(".").first()
-                if (hostname.contains(brandRaw) && !hostname.endsWith(".$brand") && hostname != brand) {
-                    brandAbuse = true
-                    typosquatTarget = brand
-                    break
-                }
+        if (typosquatTarget != null) {
+            if (brandAbuse) {
+                warnings.add("• Brand Spoofing: Contains official trademark '${typosquatTarget.split('.').first()}' but is hosted on an unofficial server.")
+            } else {
+                warnings.add("• Typosquatting: Domain mimics verified brand '$typosquatTarget' using typos.")
             }
-
-            // Closely resembles brand (Levenshtein check)?
-            if (!brandAbuse) {
-                var minDistance = 999
-                for (brand in TOP_BRANDS) {
-                    val brandRaw = brand.split(".").first()
-                    if (primaryName != brandRaw) {
-                        val dist = getLevenshteinDistance(primaryName, brandRaw)
-                        if (dist in 1..2 && dist < minDistance) {
-                            minDistance = dist;
-                            typosquatTarget = brand
-                        }
-                    }
-                }
-            }
-
-            if (typosquatTarget != null) {
-                if (brandAbuse) {
-                    warnings.add("• Brand Spoofing: Contains official trademark '${typosquatTarget.split('.').first()}' but is hosted on an unofficial server.")
-                } else {
-                    warnings.add("• Typosquatting: Domain mimics verified brand '$typosquatTarget' using typos.")
-                }
-                riskScore += 50
-            }
+            riskScore += 50
         }
 
         // Heuristics 5: Sensitive Words Abuse
-        var sensitiveWordsCount = 0
-        val lowerUrl = rawUrl.lowercase()
-        for (word in SENSITIVE_WORDS) {
-            sensitiveWordsCount += countOccurrences(lowerUrl, word)
-        }
         if (sensitiveWordsCount > 0) {
             warnings.add("• Deceptive Keywords: URL paths use security/urgency words to trick you.")
             riskScore += 15
         }
 
         // Heuristics 6: Entropy (Random auto-generated names)
-        if (!isIpAddress && hostname.isNotEmpty()) {
-            val primaryName = extractPrimaryDomainName(hostname)
-            val entropy = calculateShannonEntropy(primaryName)
-            if (primaryName.length > 8 && entropy > 4.1) {
-                warnings.add("• Random Generated Domain: Characters in domain look scripted/random.")
-                riskScore += 15
-            }
+        if (primaryName.length > 8 && shannonEntropyVal > 4.1) {
+            warnings.add("• Random Generated Domain: Characters in domain look scripted/random.")
+            riskScore += 15
         }
 
         // Heuristics 7: Dots count (Excess subdomains)
@@ -410,12 +448,10 @@ object PhishingEngine {
         }
 
         // Heuristics 10: Suspicious TLD
-        if (hostname.isNotEmpty() && !isIpAddress) {
+        if (isSuspiciousTldVal == 1.0) {
             val tld = hostname.split(".").last()
-            if (SUSPICIOUS_TLDS.contains(tld)) {
-                warnings.add("• High-Risk Domain TLD: The extension '.$tld' is statistically associated with malware and spam.")
-                riskScore += 20
-            }
+            warnings.add("• High-Risk Domain TLD: The extension '.$tld' is statistically associated with malware and spam.")
+            riskScore += 20
         }
 
         // Final score calculation

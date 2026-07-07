@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deceptive Site Blocked | PhishGuard</title>
+  <link rel="stylesheet" href="warning.css">
+</head>
+<body>
+  <div class="stars-overlay"></div>
+  <div class="warning-container">
+    <!-- Header/Shield Logo -->
+    <div class="shield-container">
+      <div class="shield-halo"></div>
+      <div class="shield-icon">
+        <svg viewBox="0 0 24 24" width="64" height="64" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Alert Message -->
+    <div class="card warning-card">
+      <div class="threat-badge">DANGEROUS SITE INTERCEPTED</div>
+      <h1 class="warning-title">Deceptive Site Ahead</h1>
+      <p class="warning-description">
+        PhishGuard has blocked access to <span id="blocked-url" class="domain-highlight">this site</span> because it has been flagged as a phishing attempt. Attackers may try to trick you into sharing passwords, banking info, or personal details.
+      </p>
+
+      <div class="score-card-container">
+        <div class="score-card">
+          <div class="score-num" id="safety-score">0%</div>
+          <div class="score-label">Safety Rating</div>
+        </div>
+        <div class="score-card">
+          <div class="score-num" id="risk-score">100%</div>
+          <div class="score-label">Phishing Risk</div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button id="btn-back" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Back to Safety
+        </button>
+        <button id="btn-sandbox" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="2" y1="10" x2="22" y2="10"></line>
+            <line x1="6" y1="21" x2="18" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          Open in Sandbox
+        </button>
+        <button id="btn-details-toggle" class="btn btn-secondary">
+          Advanced Details
+          <svg id="chevron-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Collapsible Advanced Section -->
+    <div id="details-section" class="card details-card hidden">
+      <h3 class="section-title">Security Diagnosis</h3>
+      <p class="section-subtitle">Below are the factors evaluated by our local machine learning model and heuristic checkers.</p>
+
+      <div class="diagnosis-summary">
+        <div class="diag-header">Analysis Result:</div>
+        <div class="diag-status red" id="diag-status">DANGEROUS</div>
+      </div>
+
+      <div class="threat-reasons">
+        <h4 class="sub-section-title">Triggered Threat Rules</h4>
+        <ul id="reasons-list" class="reasons-list">
+          <!-- Populated by JS -->
+        </ul>
+      </div>
+
+      <div class="ml-breakdown">
+        <h4 class="sub-section-title">Offline ML Evaluation</h4>
+        <div class="ml-bar-container">
+          <div class="ml-bar-label">AI Model Confidence: <span id="ml-prob-text">0.00%</span></div>
+          <div class="progress-bar-bg">
+            <div id="ml-progress-fill" class="progress-fill red" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bypass-container">
+        <p class="bypass-text">
+          If you believe this is a false positive and wish to proceed at your own risk:
+        </p>
+        <button id="btn-proceed" class="btn btn-danger-link">
+          Ignore Warning & Proceed Anyway
+        </button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="warning.js"></script>
+</body>
+</html>
