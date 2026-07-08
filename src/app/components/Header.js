@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Zap, WifiOff, Bell, Search, ShieldCheck } from "lucide-react";
+import { Zap, WifiOff, Bell, Search, ShieldCheck, Shield } from "lucide-react";
 
 export default function Header({ isOnline }) {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -12,15 +12,19 @@ export default function Header({ isOnline }) {
   ];
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between shrink-0 relative z-30">
+    <header className="h-16 bg-white border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between shrink-0 relative z-30">
       
       {/* Left panel: Quick search bar */}
       <div className="flex items-center gap-3 flex-1 max-w-sm">
+        {/* Mobile Branding Logo */}
+        <div className="flex lg:hidden h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-navy to-primary shadow-sm flex-shrink-0">
+          <Shield className="h-4.5 w-4.5 text-white" />
+        </div>
         <div className="relative w-full flex items-center">
           <Search className="h-4 w-4 text-text-muted absolute left-3" />
           <input
             type="text"
-            placeholder="Search threats, links, or logs..."
+            placeholder="Search threats..."
             className="w-full bg-slate-50 border border-slate-200/80 rounded-xl py-1.5 pl-9 pr-3 text-xs outline-none focus:border-primary transition-colors text-text-primary placeholder:text-text-muted"
           />
         </div>

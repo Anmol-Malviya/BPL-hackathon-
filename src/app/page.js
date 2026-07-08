@@ -64,17 +64,17 @@ export default function Home() {
               <Shield className="h-5 w-5 text-white" />
             </div>
             <span className="font-heading text-lg font-bold tracking-tight text-navy">PhishShield AI</span>
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">Enterprise</span>
+            <span className="hidden sm:inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">Enterprise</span>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-8">
             <a href="#features" className="text-sm font-medium text-text-secondary hover:text-navy transition-colors">Features</a>
             <a href="#showcase" className="text-sm font-medium text-text-secondary hover:text-navy transition-colors">AI Engine</a>
             <a href="#faq" className="text-sm font-medium text-text-secondary hover:text-navy transition-colors">FAQ</a>
             <a href="#download" className="text-sm font-medium text-text-secondary hover:text-navy transition-colors">Download</a>
           </nav>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3">
             <a 
               href="/system" 
               className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-navy shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
@@ -94,7 +94,7 @@ export default function Home() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex md:hidden items-center justify-center p-2.5 rounded-xl border border-slate-200 bg-white text-navy hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
+            className="flex lg:hidden items-center justify-center p-2.5 rounded-xl border border-slate-200 bg-white text-navy hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -103,7 +103,7 @@ export default function Home() {
 
         {/* Mobile Menu Dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-md shadow-lg transition-all">
+          <div className="lg:hidden border-t border-slate-100 bg-white/95 backdrop-blur-md shadow-lg transition-all">
             <div className="px-4 py-6 space-y-4">
               <nav className="flex flex-col gap-4">
                 <a 
