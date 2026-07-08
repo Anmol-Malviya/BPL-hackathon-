@@ -2,17 +2,26 @@
 
 export default function BottomNav({ activeTab, setActiveTab, navItems }) {
   return (
-    <nav className="bottom-nav">
-      {navItems.map((item) => (
-        <button
-          key={item.id}
-          onClick={() => setActiveTab(item.id)}
-          className={`bottom-nav-btn ${activeTab === item.id ? "active" : ""}`}
-        >
-          <span className="bottom-nav-icon">{item.icon}</span>
-          {item.label.split(" ")[0]}
-        </button>
-      ))}
+    <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden h-16 bg-white border-t border-slate-200 flex items-center justify-around px-2 pb-safe-bottom">
+      {navItems.map((item) => {
+        const isActive = activeTab === item.id;
+        return (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={`flex flex-col items-center justify-center gap-1.5 flex-1 py-1 text-center transition-colors ${
+              isActive ? "text-primary font-bold" : "text-text-secondary hover:text-navy"
+            }`}
+          >
+            <span className="h-5 w-5 flex items-center justify-center shrink-0">
+              {item.icon}
+            </span>
+            <span className="text-[9px] tracking-wide font-medium leading-none">
+              {item.label.split(" ")[0]}
+            </span>
+          </button>
+        );
+      })}
     </nav>
   );
 }

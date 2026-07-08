@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Camera, UploadCloud, RefreshCw, CheckCircle2 } from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
 
 export default function QrScanner({ onScanSuccess, onScanError }) {
@@ -167,181 +167,157 @@ export default function QrScanner({ onScanSuccess, onScanError }) {
   const handleDragLeave = () => setIsDragging(false);
 
   return (
-    <div className="qr-root">
-
-      {/* ── VIEWFINDER ─────────────────────────────────────── */}
-      <div className={`qr-viewfinder ${isScanning ? "active" : ""}`}>
-
-        {/* idle state */}
+    <div className="space-y-6">
+      
+      {/* Viewfinder block */}
+      <div className="relative aspect-video max-w-md mx-auto rounded-2xl bg-slate-900 border border-slate-800 shadow-md overflow-hidden flex flex-col justify-center items-center">
+        
+        {/* Idle scanner look */}
         {!isScanning && (
-          <div className="qr-idle">
-            <div className="qr-idle-glow" />
-            {/* animated QR icon */}
-            <div className="qr-idle-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="url(#qrGrad)" strokeWidth="2" strokeLinecap="round">
-                <rect x="3" y="3" width="5" height="5" rx="1"/>
-                <rect x="16" y="3" width="5" height="5" rx="1"/>
-                <rect x="3" y="16" width="5" height="5" rx="1"/>
-                <rect x="16" y="16" width="5" height="5" rx="1"/>
-                <path d="M9 4h6M9 20h6M4 9v6M20 9v6"/>
-                <rect x="10" y="10" width="4" height="4" rx="0.5" fill="url(#qrGrad)" stroke="none"/>
-                <defs>
-                  <linearGradient id="qrGrad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#8b5cf6"/>
-                    <stop offset="1" stopColor="#06b6d4"/>
-                  </linearGradient>
-                </defs>
-              </svg>
+          <div className="text-center p-6 space-y-3 z-10">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 mx-auto text-slate-300">
+              <Camera className="h-6 w-6" />
             </div>
-            <p className="qr-idle-title">Point Camera at QR Code</p>
-            <p className="qr-idle-sub">Position the QR code inside the frame to scan automatically</p>
+            <div>
+              <p className="text-xs font-bold text-white">Interactive Camera Scan</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Activate feed to trace QR code routing.</p>
+            </div>
           </div>
         )}
 
-        {/* actual camera feed */}
+        {/* Camera container */}
         <div
           id="qr-scanner-view"
-          className="qr-feed"
+          className="w-full h-full object-cover"
           style={{ display: isScanning ? "block" : "none" }}
         />
 
-        {/* corner brackets overlay */}
+        {/* Corner Brackets Overlay */}
         {isScanning && (
-          <div className="qr-brackets">
-            <span className="qr-bracket tl"/>
-            <span className="qr-bracket tr"/>
-            <span className="qr-bracket bl"/>
-            <span className="qr-bracket br"/>
-            <div className="qr-laser"/>
+          <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-center">
+            {/* Corner brackets bounding box */}
+            <div className="relative w-40 h-40 border border-white/20">
+              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary"></div>
+              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary"></div>
+              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-primary"></div>
+              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary"></div>
+              {/* Scan sweeping laser */}
+              <div className="absolute h-0.5 w-full bg-primary/80 top-0 animate-scanning-bar"></div>
+            </div>
           </div>
         )}
 
-        {/* top status pill */}
+        {/* Top Status Badge */}
         {isScanning && (
-          <div className="qr-status-pill">
-            <span className="qr-live-dot"/>
+          <div className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur border border-slate-800 rounded-lg px-2.5 py-1 text-[9px] font-bold text-white flex items-center gap-1.5 z-20">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
             <span>{cameraLabel()}</span>
           </div>
         )}
 
-        {/* bottom controls bar */}
-        <div className="qr-controls">
+        {/* Bottom Controls Panel */}
+        <div className="absolute bottom-3 inset-x-3 flex gap-2 z-20 justify-center">
           <button
             onClick={handleToggle}
-            className={`qr-main-btn ${isScanning ? "stop" : "start"}`}
             disabled={hasCameraPermission === false}
+            className={`px-4 py-2 rounded-xl text-xs font-bold text-white shadow flex items-center gap-1.5 transition-all ${
+              isScanning 
+                ? "bg-red-600 hover:bg-red-700" 
+                : "bg-primary hover:bg-primary-hover disabled:opacity-50"
+            }`}
           >
-            {isScanning ? (
-              <>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <rect x="4" y="4" width="16" height="16" rx="3"/>
-                </svg>
-                Stop Camera
-              </>
-            ) : (
-              <>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                  <circle cx="12" cy="13" r="4"/>
-                </svg>
-                Start Camera
-              </>
-            )}
+            {isScanning ? "Deactivate Camera" : "Activate Camera"}
           </button>
-
+          
           {cameras.length > 1 && (
             <button
               onClick={handleFlip}
-              className="qr-flip-btn"
-              title="Flip Camera"
               disabled={!isScanning}
+              className="p-2 bg-slate-950/80 hover:bg-slate-900 border border-slate-800 rounded-xl text-white disabled:opacity-40 transition-colors"
+              title="Flip Feed Source"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M1 4v6h6"/>
-                <path d="M23 20v-6h-6"/>
-                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-              </svg>
+              <RefreshCw className="h-4.5 w-4.5" />
             </button>
           )}
         </div>
       </div>
 
-      {/* error message */}
+      {/* Camera permission error bar */}
       {errorMsg && (
-        <div className="qr-error-bar" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-          <AlertTriangle size={14} className="text-red-400" />
+        <div className="p-3 bg-red-50 text-red-800 rounded-xl border border-red-200 text-xs flex items-center gap-2 max-w-md mx-auto">
+          <AlertTriangle className="h-4.5 w-4.5 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      {/* success result */}
+      {/* Camera scan success bar */}
       {scanResult && (
-        <div className="qr-success-bar">
-          <span className="qr-success-icon">✓</span>
+        <div className="p-3 bg-green-50 text-green-800 rounded-xl border border-green-200 text-xs flex items-start gap-2.5 max-w-md mx-auto">
+          <CheckCircle2 className="h-4.5 w-4.5 text-green-600 shrink-0 mt-0.5" />
           <div>
-            <p className="qr-success-label">QR Code Detected — Analyzing...</p>
-            <p className="qr-success-url">{scanResult}</p>
+            <span className="font-bold block">QR code detected</span>
+            <span className="text-[10px] text-green-700 font-mono block mt-0.5 truncate select-all">{scanResult}</span>
           </div>
         </div>
       )}
 
-      {/* ── DIVIDER ────────────────────────────────────────── */}
-      <div className="qr-divider"><span>OR</span></div>
+      <div className="relative max-w-md mx-auto">
+        <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t border-slate-200/60 -z-10"></span>
+        <span className="bg-white px-3 text-[10px] uppercase font-bold tracking-wider text-text-muted mx-auto block w-max">
+          OR AUDIT IMAGE FILE
+        </span>
+      </div>
 
-      {/* ── DRAG & DROP UPLOAD ──────────────────────────────── */}
+      {/* Drag & Drop File scanner */}
       <div
-        className={`qr-dropzone ${isDragging ? "dragging" : ""} ${fileScanSuccess ? "success" : ""}`}
-        onClick={() => fileInputRef.current?.click()}
-        onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`max-w-md mx-auto border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-colors ${
+          isDragging 
+            ? "border-primary bg-primary/5 text-primary" 
+            : "border-slate-200 hover:border-slate-300 text-text-secondary bg-slate-50/50"
+        }`}
       >
         <input
           type="file"
           accept="image/*"
           ref={fileInputRef}
           onChange={handleFileChange}
-          style={{ display: "none" }}
+          className="hidden"
         />
 
         {isFileScanning ? (
-          <div className="qr-dropzone-content">
-            <div className="qr-file-spinner"/>
-            <p className="qr-dropzone-title">Scanning image...</p>
+          <div className="space-y-3">
+            <RefreshCw className="h-7 w-7 text-primary animate-spin mx-auto" />
+            <p className="text-xs font-bold text-navy">Decompressing image bytes...</p>
           </div>
         ) : fileScanSuccess ? (
-          <div className="qr-dropzone-content">
-            <div className="qr-dropzone-check">✓</div>
-            <p className="qr-dropzone-title" style={{color:"var(--color-safe)"}}>QR Code Found!</p>
-            <p className="qr-dropzone-sub">Tap to scan another image</p>
+          <div className="space-y-2">
+            <span className="h-8 w-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center mx-auto font-bold text-sm">✓</span>
+            <p className="text-xs font-bold text-green-600">Scan Complete!</p>
+            <p className="text-[9px] text-text-muted">Tap to load another file</p>
           </div>
         ) : (
-          <div className="qr-dropzone-content">
-            <div className="qr-dropzone-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="7" height="7" rx="1"/>
-                <rect x="14" y="3" width="7" height="7" rx="1"/>
-                <rect x="3" y="14" width="7" height="7" rx="1"/>
-                <path d="M14 14h1v1M14 18h1M18 14h1M18 18h1"/>
-              </svg>
-            </div>
+          <div className="space-y-3">
+            <UploadCloud className="h-8 w-8 text-text-muted mx-auto" />
             <div>
-              <p className="qr-dropzone-title">{isDragging ? "Drop image here" : "Upload QR Code Image"}</p>
-              <p className="qr-dropzone-sub">Drag & drop or tap to browse · PNG, JPG, WEBP</p>
+              <p className="text-xs font-bold text-navy">Upload QR Code Screenshot</p>
+              <p className="text-[10px] text-text-muted mt-0.5">Drag image file here, or tap to browse</p>
             </div>
           </div>
         )}
       </div>
 
       {fileScanError && (
-        <div className="qr-error-bar" style={{marginTop:"10px", display: "inline-flex", alignItems: "center", gap: "6px"}}>
-          <AlertTriangle size={14} className="text-red-400" />
+        <div className="p-3 bg-red-50 text-red-800 rounded-xl border border-red-200 text-xs flex items-center gap-2 max-w-md mx-auto">
+          <AlertTriangle className="h-4.5 w-4.5 shrink-0" />
           <span>{fileScanError}</span>
         </div>
       )}
 
-      {/* Hidden dummy container required by html5-qrcode for file scans */}
-      <div id="qr-file-dummy-container" style={{ display: "none" }}/>
+      <div id="qr-file-dummy-container" className="hidden" />
     </div>
   );
 }
