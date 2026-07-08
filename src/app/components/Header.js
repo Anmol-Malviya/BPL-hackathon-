@@ -17,9 +17,7 @@ export default function Header({ isOnline }) {
       {/* Left panel: Quick search bar */}
       <div className="flex items-center gap-3 flex-1 max-w-sm">
         {/* Mobile Branding Logo */}
-        <div className="flex lg:hidden h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-navy to-primary shadow-sm flex-shrink-0">
-          <Shield className="h-4.5 w-4.5 text-white" />
-        </div>
+        <img src="/ic_app_logo.png" alt="SecureOS" className="flex lg:hidden h-9 w-9 rounded-xl shadow-sm flex-shrink-0" />
         <div className="relative w-full flex items-center">
           <Search className="h-4 w-4 text-text-muted absolute left-3" />
           <input

@@ -7,12 +7,10 @@ export default function Sidebar({ activeTab, setActiveTab, threatStats, navItems
     <aside className="hidden lg:flex flex-col w-64 bg-navy text-white h-full border-r border-slate-800 shrink-0">
       {/* Brand Header */}
       <div className="flex items-center gap-2.5 px-6 h-16 border-b border-slate-800/80">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-          <Shield className="h-5 w-5 text-white" />
-        </div>
+        <img src="/ic_app_logo.png" alt="SecureOS" className="h-9 w-9 rounded-lg flex-shrink-0" />
         <div className="flex flex-col">
-          <span className="font-heading font-bold text-sm tracking-wide leading-none">PhishShield</span>
-          <span className="text-[10px] text-primary font-semibold mt-0.5 uppercase tracking-wider">AI Operations</span>
+          <span className="font-heading font-bold text-sm tracking-wide leading-none">SecureOS</span>
+          <span className="text-[10px] text-primary font-semibold mt-0.5 uppercase tracking-wider">Threat Shield</span>
         </div>
       </div>
 

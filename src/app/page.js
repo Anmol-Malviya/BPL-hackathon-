@@ -60,10 +60,8 @@ export default function Home() {
       <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-md transition-all">
         <div className="mx-auto flex max-w-7xl h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-navy to-primary shadow-md shadow-primary/20">
-              <Shield className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-heading text-lg font-bold tracking-tight text-navy">PhishShield AI</span>
+            <img src="/ic_app_logo.png" alt="SecureOS" className="h-10 w-10 rounded-xl shadow-md shadow-primary/20" />
+            <span className="font-heading text-lg font-bold tracking-tight text-navy">SecureOS</span>
             <span className="hidden sm:inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">Enterprise</span>
           </div>
 
@@ -266,9 +264,9 @@ export default function Home() {
                   <div className="absolute top-0 left-1/2 w-0.5 h-1/2 bg-gradient-to-b from-primary to-transparent origin-bottom animate-radar-sweep"></div>
                 </div>
 
-                {/* Core Shield Badge */}
-                <div className="z-10 flex h-36 w-36 items-center justify-center rounded-3xl bg-gradient-to-br from-navy to-navy-dark shadow-2xl">
-                  <Shield className="h-16 w-16 text-white stroke-[1.25]" />
+                {/* Core App Icon Badge */}
+                <div className="z-10 flex h-36 w-36 items-center justify-center rounded-3xl bg-gradient-to-br from-navy to-navy-dark shadow-2xl overflow-hidden">
+                  <img src="/ic_app_logo.png" alt="SecureOS" className="h-28 w-28 object-cover rounded-2xl" />
                   <div className="absolute flex h-20 w-20 items-center justify-center animate-ping opacity-15 bg-primary rounded-full"></div>
                 </div>
 
@@ -391,7 +389,7 @@ export default function Home() {
               <span className="text-xs font-bold text-primary tracking-wider uppercase">Artificial Intelligence Showcase</span>
               <h2 className="font-heading text-3xl font-extrabold text-navy mt-3">How Our Feature-Extraction Engine Decodes Threats</h2>
               <p className="text-text-secondary mt-4 leading-relaxed">
-                PhishShield AI dissects URLs into high-dimensional feature vectors. Rather than relying on simple, easily-bypassed blacklists, we evaluate entropy patterns, subdomain stack lengths, and visual character lookalikes (homographs).
+                SecureOS dissects URLs into high-dimensional feature vectors. Rather than relying on simple, easily-bypassed blacklists, we evaluate entropy patterns, subdomain stack lengths, and visual character lookalikes (homographs).
               </p>
               
               <div className="mt-8 space-y-4">
@@ -464,7 +462,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                quote: "PhishShield AI has completely simplified how we scan suspicious URLs. The isolated sandbox preview gives our IT helpdesk the perfect security envelope.",
+                quote: "SecureOS has completely simplified how we scan suspicious URLs. The isolated sandbox preview gives our IT helpdesk the perfect security envelope.",
                 name: "Marcus Vance",
                 role: "VP of Security Operations at CloudScale"
               },
@@ -558,7 +556,7 @@ export default function Home() {
               Mobile &amp; Desktop
             </span>
             <h2 className="font-heading text-3xl sm:text-4xl font-extrabold text-navy mt-4">
-              Carry PhishShield In Your Pocket
+              Carry SecureOS In Your Pocket
             </h2>
             <p className="text-text-secondary mt-3 leading-relaxed max-w-xl mx-auto">
               Scan QR codes, verify suspicious links, and protect your credentials — all offline, on your device. No cloud, no data sharing, full privacy.
@@ -574,7 +572,7 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <a
                   href="/app-debug.apk"
-                  download="PhishShield.apk"
+                  download="SecureOS.apk"
                   className="group flex items-center gap-4 rounded-2xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary-hover hover:to-blue-700 text-white shadow-xl shadow-primary/20 px-6 py-4.5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/30 flex-grow"
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
@@ -582,7 +580,7 @@ export default function Home() {
                   </div>
                   <div className="text-left min-w-0 flex-grow">
                     <span className="block text-[9px] text-white/80 font-bold tracking-widest uppercase">STABLE RELEASE</span>
-                    <span className="block text-base font-extrabold text-white leading-tight">Download PhishShield APK</span>
+                    <span className="block text-base font-extrabold text-white leading-tight">Download SecureOS APK</span>
                   </div>
                   <div className="hidden sm:flex flex-col items-end text-right text-xs text-white/70 font-semibold border-l border-white/15 pl-4 pr-1 flex-shrink-0">
                     <span>v1.0.0</span>
@@ -641,10 +639,8 @@ export default function Home() {
                     {/* App bar */}
                     <div className="flex items-center justify-between mt-1.5">
                       <div className="flex items-center gap-1.5">
-                        <div className="h-6 w-6 bg-primary rounded-lg flex items-center justify-center shadow-sm">
-                          <Shield className="h-3.5 w-3.5 text-white" />
-                        </div>
-                        <span className="text-white text-[10px] font-bold tracking-wide">PhishShield</span>
+                        <img src="/ic_app_logo.png" alt="SecureOS" className="h-6 w-6 rounded-lg" />
+                        <span className="text-white text-[10px] font-bold tracking-wide">SecureOS</span>
                       </div>
                       <BellRing className="h-3.5 w-3.5 text-slate-400" />
                     </div>
@@ -726,16 +722,14 @@ export default function Home() {
       <footer className="bg-navy text-white border-t border-slate-800 py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Shield className="h-4.5 w-4.5 text-white" />
-            </div>
-            <span className="font-heading font-bold text-sm tracking-wide">PhishShield AI Portal</span>
+            <img src="/ic_app_logo.png" alt="SecureOS" className="h-8 w-8 rounded-lg" />
+            <span className="font-heading font-bold text-sm tracking-wide">SecureOS Portal</span>
           </div>
           <p className="text-xs text-slate-400 text-center md:text-left">
             Developed for Bhopal Hackathon 2026. Empowering businesses with advanced offline & online threat mitigation.
           </p>
           <p className="text-xs text-slate-500">
-            © 2026 PhishShield AI. All rights reserved.
+            © 2026 SecureOS. All rights reserved.
           </p>
         </div>
       </footer>

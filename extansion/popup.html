@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PhishGuard Shield</title>
+  <title>SecureOS | Threat Shield</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -11,12 +11,8 @@
     <!-- Header -->
     <header class="header">
       <div class="brand">
-        <svg class="logo" viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          <path d="M12 8v4"></path>
-          <path d="M12 16h.01"></path>
-        </svg>
-        <span class="brand-name">PhishGuard</span>
+        <img src="ic_app_logo.png" class="brand-logo-img" alt="SecureOS Logo" />
+        <span class="brand-name">Secure<span class="brand-name-suffix">OS</span></span>
       </div>
       <div class="badge-status-container">
         <span id="shield-active-badge" class="badge-status active">SHIELD ON</span>
@@ -34,7 +30,7 @@
 
         <div class="gauge-container">
           <svg class="progress-ring" width="120" height="120">
-            <circle class="progress-ring-bg" stroke="rgba(255,255,255,0.03)" stroke-width="8" fill="transparent" r="50" cx="60" cy="60"/>
+            <circle class="progress-ring-bg" stroke="#EEF2F7" stroke-width="8" fill="transparent" r="50" cx="60" cy="60"/>
             <circle id="progress-ring-fill" class="progress-ring-fill" stroke="var(--color-safe)" stroke-width="8" stroke-dasharray="314.159" stroke-dashoffset="314.159" stroke-linecap="round" fill="transparent" r="50" cx="60" cy="60"/>
           </svg>
           <div class="gauge-center">
@@ -127,16 +123,16 @@
       <section class="card sync-card">
         <div class="sync-header" style="display: flex; justify-content: space-between; align-items: center;">
           <span class="section-title">Threat Intel Database</span>
-          <button id="btn-sync-intel" class="btn-clear" style="color: var(--color-secondary); font-size: 10px; font-weight: 700; text-transform: uppercase;">Sync Rules</button>
+          <button id="btn-sync-intel" class="btn-clear" style="color: var(--color-primary); font-size: 10px; font-weight: 700; text-transform: uppercase;">Sync Rules</button>
         </div>
-        <div class="sync-info-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(5,3,16,0.3); padding: 8px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-          <div class="sync-info-item" style="display: flex; flex-direction: column; align-items: center;">
-            <span id="sync-rules-count" class="sync-val" style="font-family: var(--font-mono); font-size: 14px; font-weight: 800;">0</span>
-            <span class="sync-label" style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase; margin-top: 2px;">Local Rules</span>
+        <div class="sync-info-row">
+          <div class="sync-info-item">
+            <span id="sync-rules-count" class="sync-val">0</span>
+            <span class="sync-label">Local Rules</span>
           </div>
-          <div class="sync-info-item" style="display: flex; flex-direction: column; align-items: center;">
-            <span id="sync-time-text" class="sync-val" style="font-size: 10.5px; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">Never</span>
-            <span class="sync-label" style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase; margin-top: 2px;">Last Updated</span>
+          <div class="sync-info-item">
+            <span id="sync-time-text" class="sync-val" style="font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center;">Never</span>
+            <span class="sync-label">Last Updated</span>
           </div>
         </div>
         <div id="sync-status" class="sync-status text-muted" style="font-size: 10px; text-align: center;">
