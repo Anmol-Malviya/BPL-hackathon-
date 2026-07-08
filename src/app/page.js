@@ -16,7 +16,15 @@ import {
   Layers, 
   Zap, 
   ShieldCheck, 
-  UserCheck 
+  UserCheck,
+  Smartphone,
+  Download,
+  Star,
+  Wifi,
+  BellRing,
+  ScanLine,
+  Menu,
+  X
 } from "lucide-react";
 import { analyzeURL } from "../lib/phishingEngine";
 
@@ -25,6 +33,7 @@ export default function Home() {
   const [scanResult, setScanResult] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [faqOpen, setFaqOpen] = useState({});
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleQuickScan = (e) => {
     e.preventDefault();
@@ -62,9 +71,10 @@ export default function Home() {
             <a href="#features" className="text-sm font-medium text-text-secondary hover:text-navy transition-colors">Features</a>
             <a href="#showcase" className="text-sm font-medium text-text-secondary hover:text-navy transition-colors">AI Engine</a>
             <a href="#faq" className="text-sm font-medium text-text-secondary hover:text-navy transition-colors">FAQ</a>
+            <a href="#download" className="text-sm font-medium text-text-secondary hover:text-navy transition-colors">Download</a>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3">
             <a 
               href="/system" 
               className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-navy shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
@@ -80,7 +90,72 @@ export default function Home() {
               <ArrowRight className="h-4 w-4" />
             </a>
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flex md:hidden items-center justify-center p-2.5 rounded-xl border border-slate-200 bg-white text-navy hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-md shadow-lg transition-all">
+            <div className="px-4 py-6 space-y-4">
+              <nav className="flex flex-col gap-4">
+                <a 
+                  href="#features" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-sm font-semibold text-text-secondary hover:text-navy transition-colors py-2 border-b border-slate-50"
+                >
+                  Features
+                </a>
+                <a 
+                  href="#showcase" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-sm font-semibold text-text-secondary hover:text-navy transition-colors py-2 border-b border-slate-50"
+                >
+                  AI Engine
+                </a>
+                <a 
+                  href="#faq" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-sm font-semibold text-text-secondary hover:text-navy transition-colors py-2 border-b border-slate-50"
+                >
+                  FAQ
+                </a>
+                <a 
+                  href="#download" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-sm font-semibold text-text-secondary hover:text-navy transition-colors py-2"
+                >
+                  Download
+                </a>
+              </nav>
+              <div className="flex flex-col gap-3 pt-4 border-t border-slate-100">
+                <a 
+                  href="/system" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-navy shadow-sm hover:bg-slate-50 transition-all duration-200"
+                >
+                  <Terminal className="h-4 w-4" />
+                  Console Dashboard
+                </a>
+                <a 
+                  href="/system" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-1 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-md shadow-primary/15 hover:bg-primary-hover transition-all duration-200"
+                >
+                  Get Started
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* ====== HERO SECTION ====== */}
@@ -465,6 +540,184 @@ export default function Home() {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ====== APP DOWNLOAD SECTION ====== */}
+      <section id="download" className="relative py-24 lg:py-28 overflow-hidden bg-white border-t border-slate-100">
+        {/* Subtle accent blobs — consistent with hero/features pattern */}
+        <div className="absolute -top-32 -right-32 w-[480px] h-[480px] rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 -left-24 w-[320px] h-[320px] rounded-full bg-accent/5 blur-3xl pointer-events-none" />
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+          {/* Section header — mirrors Features & AI Showcase pattern */}
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <span className="text-xs font-bold text-primary tracking-widest uppercase bg-primary/10 px-3 py-1 rounded-full">
+              Mobile &amp; Desktop
+            </span>
+            <h2 className="font-heading text-3xl sm:text-4xl font-extrabold text-navy mt-4">
+              Carry PhishShield In Your Pocket
+            </h2>
+            <p className="text-text-secondary mt-3 leading-relaxed max-w-xl mx-auto">
+              Scan QR codes, verify suspicious links, and protect your credentials — all offline, on your device. No cloud, no data sharing, full privacy.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+
+            {/* Left — Store Badges + Stats */}
+            <div className="lg:col-span-7 flex flex-col gap-8">
+
+              {/* Download Button */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a
+                  href="/app-debug.apk"
+                  download="PhishShield.apk"
+                  className="group flex items-center gap-4 rounded-2xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary-hover hover:to-blue-700 text-white shadow-xl shadow-primary/20 px-6 py-4.5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/30 flex-grow"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                    <Download className="h-6 w-6 text-white animate-bounce" />
+                  </div>
+                  <div className="text-left min-w-0 flex-grow">
+                    <span className="block text-[9px] text-white/80 font-bold tracking-widest uppercase">STABLE RELEASE</span>
+                    <span className="block text-base font-extrabold text-white leading-tight">Download PhishShield APK</span>
+                  </div>
+                  <div className="hidden sm:flex flex-col items-end text-right text-xs text-white/70 font-semibold border-l border-white/15 pl-4 pr-1 flex-shrink-0">
+                    <span>v1.0.0</span>
+                    <span>6.9 MB</span>
+                  </div>
+                </a>
+              </div>
+
+              {/* Stats — mirrors Platform Statistics card style */}
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { value: "Verified", label: "Safe APK", sub: "Clean & Signed" },
+                  { value: "100%", label: "Offline Operation", sub: "No data logs" },
+                  { value: "Free", label: "No Subscription", sub: "All features included" },
+                ].map((stat, i) => (
+                  <div key={i} className="bg-white border border-slate-200/60 rounded-2xl p-5 text-center shadow-sm">
+                    <span className="text-xl font-extrabold text-navy block">{stat.value}</span>
+                    <span className="text-xs font-semibold text-text-primary block mt-0.5">{stat.label}</span>
+                    <span className="text-[10px] text-text-muted block mt-0.5">{stat.sub}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Feature pills — lightweight tag list */}
+              <div className="flex flex-wrap gap-2.5">
+                {[
+                  { icon: <Lock className="h-3.5 w-3.5" />, text: "100% Offline Mode" },
+                  { icon: <Shield className="h-3.5 w-3.5" />, text: "Zero Data Collection" },
+                  { icon: <ScanLine className="h-3.5 w-3.5" />, text: "Instant QR Decode" },
+                  { icon: <Zap className="h-3.5 w-3.5" />, text: "180ms Analysis" },
+                ].map((pill, i) => (
+                  <span key={i} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-semibold text-text-secondary">
+                    <span className="text-primary">{pill.icon}</span>
+                    {pill.text}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Right — Phone Mockup */}
+            <div className="lg:col-span-5 flex justify-center lg:justify-end">
+              <div className="relative">
+                {/* Subtle shadow bloom */}
+                <div className="absolute inset-0 rounded-[3rem] bg-primary/8 blur-3xl scale-110 pointer-events-none" />
+
+                {/* Phone frame */}
+                <div
+                  className="relative w-60 rounded-[3rem] bg-gradient-to-b from-slate-800 to-navy-dark border border-slate-700/40 shadow-2xl shadow-slate-900/20 overflow-hidden"
+                  style={{ aspectRatio: '9/19' }}
+                >
+                  {/* Notch */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-5 bg-slate-900 rounded-b-2xl z-20" />
+
+                  {/* Screen content */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-navy to-slate-900 p-3.5 pt-7 flex flex-col gap-2.5">
+                    {/* App bar */}
+                    <div className="flex items-center justify-between mt-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-6 w-6 bg-primary rounded-lg flex items-center justify-center shadow-sm">
+                          <Shield className="h-3.5 w-3.5 text-white" />
+                        </div>
+                        <span className="text-white text-[10px] font-bold tracking-wide">PhishShield</span>
+                      </div>
+                      <BellRing className="h-3.5 w-3.5 text-slate-400" />
+                    </div>
+
+                    {/* QR Scanner card */}
+                    <div className="rounded-2xl bg-white/5 border border-white/8 p-2.5">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <ScanLine className="h-3 w-3 text-primary" />
+                        <span className="text-white text-[9px] font-bold tracking-wide">Live QR Scanner</span>
+                        <span className="ml-auto flex h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+                      </div>
+                      <div className="aspect-square rounded-xl bg-slate-800/80 border border-white/5 flex items-center justify-center">
+                        <div className="relative w-14 h-14">
+                          <div className="absolute top-0 left-0 w-3.5 h-3.5 border-t-2 border-l-2 border-primary" />
+                          <div className="absolute top-0 right-0 w-3.5 h-3.5 border-t-2 border-r-2 border-primary" />
+                          <div className="absolute bottom-0 left-0 w-3.5 h-3.5 border-b-2 border-l-2 border-primary" />
+                          <div className="absolute bottom-0 right-0 w-3.5 h-3.5 border-b-2 border-r-2 border-primary" />
+                          <div className="absolute top-1/2 left-0 right-0 h-px bg-primary/70 animate-pulse" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Result cards */}
+                    <div className="rounded-xl bg-green-500/10 border border-green-500/20 px-3 py-2 flex items-center gap-2">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-green-400 flex-shrink-0" />
+                      <div>
+                        <span className="text-green-300 text-[9px] font-bold block leading-none">URL is Safe</span>
+                        <span className="text-slate-400 text-[8px]">Score: 97% · 0 flags</span>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-3 py-2 flex items-center gap-2">
+                      <AlertTriangle className="h-3.5 w-3.5 text-red-400 flex-shrink-0" />
+                      <div>
+                        <span className="text-red-300 text-[9px] font-bold block leading-none">Phishing Blocked</span>
+                        <span className="text-slate-400 text-[8px]">secure-paypal.fit · High Risk</span>
+                      </div>
+                    </div>
+
+                    {/* Bottom nav bar */}
+                    <div className="mt-auto flex justify-around border-t border-white/5 pt-2">
+                      {[Shield, Globe, ScanLine, Activity].map((Icon, i) => (
+                        <div key={i} className={`p-1.5 rounded-lg ${i === 2 ? 'bg-primary' : 'bg-white/5'}`}>
+                          <Icon className={`h-3 w-3 ${i === 2 ? 'text-white' : 'text-slate-500'}`} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating notification badges — white cards matching hero style */}
+                <div className="absolute -right-8 top-10 rounded-xl bg-white border border-slate-200 px-3 py-2 shadow-md flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-navy block leading-none">Threat Blocked</span>
+                    <span className="text-[8px] text-text-muted">2ms · Offline</span>
+                  </div>
+                </div>
+
+                <div className="absolute -left-10 bottom-16 rounded-xl bg-white border border-slate-200 px-3 py-2 shadow-md flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Smartphone className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-navy block leading-none">Offline Ready</span>
+                    <span className="text-[8px] text-text-muted">No internet needed</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>

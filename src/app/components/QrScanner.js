@@ -46,15 +46,43 @@ export default function QrScanner({ onScanSuccess, onScanError }) {
     setErrorMsg("");
 
     try {
-      // STEP 1: Explicitly request camera permission first.
-      // Without this, getCameras() may return empty on Chrome / Edge even if a camera exists,
-      // because device labels are hidden until the user grants access.
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      // Immediately release the test stream — we only needed it to trigger the browser prompt.
-      stream.getTracks().forEach((track) => track.stop());
+      // STEP 1: Request camera permission to unlock device labels.
+      // We hold the stream open while we enumerate so the OS doesn't
+      // re-lock the camera between the two calls (avoids NotReadableError).
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      } catch (permErr) {
+        const n = permErr?.name || "";
+        if (n === "NotAllowedError" || n === "PermissionDeniedError") {
+          setErrorMsg("Camera access was denied. Please allow camera permission in your browser's site settings and try again.");
+        } else if (n === "NotFoundError" || n === "DevicesNotFoundError") {
+          setErrorMsg("No camera device was detected. Make sure a camera is connected and enabled.");
+        } else if (n === "NotReadableError" || n === "TrackStartError") {
+          setErrorMsg("Camera is in use by another application. Please close any app using the camera (e.g., Teams, Zoom, Discord) and click Retry.");
+        } else {
+          setErrorMsg(`Camera error: ${permErr?.message || "Unknown error."}`);
+        }
+        setHasCameraPermission(false);
+        return;
+      }
 
-      // STEP 2: Enumerate cameras. Labels will now be populated.
-      const devices = await Html5Qrcode.getCameras();
+      // STEP 2: While the stream is open, enumerate devices via native API.
+      // This avoids Html5Qrcode.getCameras() making a second getUserMedia call
+      // which triggers NotReadableError on Windows due to the OS camera lock.
+      let devices = [];
+      try {
+        const allDevices = await navigator.mediaDevices.enumerateDevices();
+        devices = allDevices
+          .filter((d) => d.kind === "videoinput")
+          .map((d) => ({ id: d.deviceId, label: d.label || `Camera ${d.deviceId.slice(0, 6)}` }));
+      } catch (_) {
+        // Fallback: try Html5Qrcode enumeration
+        try { devices = await Html5Qrcode.getCameras(); } catch (_2) {}
+      } finally {
+        // Release the permission-unlock stream AFTER enumeration is done.
+        stream.getTracks().forEach((t) => t.stop());
+      }
 
       if (devices && devices.length > 0) {
         setCameras(devices);
@@ -74,15 +102,11 @@ export default function QrScanner({ onScanSuccess, onScanError }) {
       setHasCameraPermission(false);
       const name = err?.name || "";
       if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-        setErrorMsg(
-          "Camera access was denied. Please allow camera permission in your browser's site settings and try again."
-        );
+        setErrorMsg("Camera access was denied. Please allow camera permission in your browser's site settings and try again.");
       } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
         setErrorMsg("No camera device was detected. Make sure a camera is connected and enabled.");
       } else if (name === "NotReadableError" || name === "TrackStartError") {
-        setErrorMsg(
-          "Camera is already in use by another app. Close other apps using the camera and try again."
-        );
+        setErrorMsg("Camera is in use by another application. Please close any app using the camera (e.g., Teams, Zoom, Discord) and click Retry.");
       } else if (name === "OverconstrainedError") {
         setErrorMsg("Could not find a camera matching the required constraints.");
       } else if (name === "SecurityError") {
