@@ -8,7 +8,7 @@ try {
   console.warn('Warning: Failed to set custom DNS servers in Node:', e);
 }
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://av:4328@av.elcl8qr.mongodb.net/Food-Company';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://av:4328@av.elcl8qr.mongodb.net/phishguard';
 
 if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable');
