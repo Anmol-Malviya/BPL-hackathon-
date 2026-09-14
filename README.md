@@ -1,6 +1,6 @@
 # Phish-Guard
-
 [![Phish-Guard Screenshot](./Screenshot%202026-09-14%20232237.png)](https://bpl-hackathon.vercel.app/)
+
 ## Project Overview
 Phish-Guard is a modern, full-stack cybersecurity web application designed to detect and prevent phishing attacks. By leveraging a combination of machine learning algorithms and advanced heuristics, it analyzes URLs, emails, and QR codes to identify malicious intent, typosquatting, brand impersonation, and other common phishing vectors. The application provides users with an intuitive dashboard to scan potential threats and view historical analytics.
 
