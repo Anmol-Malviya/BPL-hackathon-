@@ -1,6 +1,7 @@
 # Phish-Guard
-[![Phish-Guard Screenshot](./Screenshot%202026-09-14%20232237.png)](https://bpl-hackathon.vercel.app/)
+![Phish-Guard Banner](./public/images/banner.jpg)
 
+[![Phish-Guard Screenshot](./Screenshot%202026-09-14%20232237.png)](https://bpl-hackathon.vercel.app/)
 ## Project Overview
 Phish-Guard is a modern, full-stack cybersecurity web application designed to detect and prevent phishing attacks. By leveraging a combination of machine learning algorithms and advanced heuristics, it analyzes URLs, emails, and QR codes to identify malicious intent, typosquatting, brand impersonation, and other common phishing vectors. The application provides users with an intuitive dashboard to scan potential threats and view historical analytics.
 
@@ -12,6 +13,9 @@ Phish-Guard is a modern, full-stack cybersecurity web application designed to de
 - **Historical Analytics**: Tracks past scans and visualizes security trends over time using interactive charts.
 - **Safe Sandbox Modal**: A dedicated environment to preview or interact with potentially suspicious links safely.
 - **Progressive Web App (PWA) Support**: Can be installed on mobile and desktop devices for native-like access.
+
+## Dashboard Preview
+![Phish-Guard Dashboard Mockup](./public/images/dashboard.jpg)
 
 ## Technologies Used
 - **Frontend Framework**: Next.js 16 (App Router)
@@ -59,6 +63,29 @@ Phish-Guard utilizes a custom, localized **Machine Learning Engine** integrated 
 3. Use the navigation sidebar to switch between different analysis tools (URL Checker, Email Analyzer, QR Scanner).
 4. Enter a suspicious URL or paste email headers into the respective tools to receive an instant safety rating and a detailed breakdown of the threat analysis.
 
+## System Architecture
+
+```mermaid
+graph TD;
+    Client[Client / Browser] -->|URL, Email Headers, QR| NextJS[Next.js App Router];
+    NextJS -->|API Requests| APIRoutes[Next.js API Routes];
+    APIRoutes -->|Analysis Request| MLEngine[Phishing ML Engine];
+    MLEngine -->|Heuristics + ML Model| AnalysisResult[Risk Score & Threat Details];
+    AnalysisResult --> APIRoutes;
+    APIRoutes -->|Save History| MongoDB[(MongoDB)];
+    APIRoutes -->|Return Response| Client;
+```
+
+### System Design Explanation
+The Phish-Guard application is built on a scalable and efficient architecture designed for rapid threat detection:
+
+1. **Client Interface (Next.js & React 19)**: The entry point for users. It securely captures URLs, parses email headers, and utilizes the device camera for QR code scanning. The UI is highly responsive, utilizing Tailwind CSS and Framer Motion for a premium, dark-themed experience.
+2. **Next.js API Routes**: Acts as the secure middle layer. It receives the payloads from the client and orchestrates the analysis workflow.
+3. **Phishing ML Engine (Core Intelligence)**: A dual-layered detection mechanism located on the server:
+   - **Heuristics Layer**: Instantly checks for common red flags like typosquatting (using Levenshtein distance), IP-based URLs, and missing SSL certificates.
+   - **Machine Learning Layer**: Evaluates extracted features (e.g., Shannon entropy, structural anomalies) using pre-trained weights to calculate a definitive threat probability score.
+4. **Data Persistence (MongoDB)**: All scan results are securely logged into MongoDB. This enables the historical analytics dashboard, allowing users to track their exposure to threats over time.
+
 ## Project Structure
 ```text
 phish-guard/
@@ -84,3 +111,6 @@ phish-guard/
 ## Important Information
 - **Local Execution**: The phishing detection engine runs locally based on the provided model weights, meaning it can function effectively even in environments with limited external network access (once the site is loaded).
 - **Extensibility**: The heuristics engine can be easily updated by adding new patterns to the `TOP_BRANDS`, `SHORTENERS`, or `SUSPICIOUS_TLDS` arrays in `phishingEngine.js`.
+
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
