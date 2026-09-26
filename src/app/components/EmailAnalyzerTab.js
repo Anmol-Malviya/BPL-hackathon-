@@ -15,7 +15,8 @@ import {
   Paperclip,
   Download,
   Link2,
-  Trash2
+  Trash2,
+  RefreshCw
 } from "lucide-react";
 
 export default function EmailAnalyzerTab({

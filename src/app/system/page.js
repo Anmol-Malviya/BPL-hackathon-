@@ -74,7 +74,7 @@ export default function SystemPage() {
   // Check online/offline status & load history on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setIsOnline(navigator.onLine);
+      setTimeout(() => setIsOnline(navigator.onLine), 0);
       const handleOnline = () => setIsOnline(true);
       const handleOffline = () => setIsOnline(false);
 

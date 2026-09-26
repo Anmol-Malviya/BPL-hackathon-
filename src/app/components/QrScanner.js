@@ -120,6 +120,7 @@ export default function QrScanner({ onScanSuccess, onScanError }) {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     initCameras();
     return () => { stopScanning(); };
   }, [initCameras, stopScanning]);
