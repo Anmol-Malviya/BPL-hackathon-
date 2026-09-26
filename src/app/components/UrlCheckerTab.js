@@ -56,10 +56,10 @@ export default function UrlCheckerTab({
         setScanStepIndex((prev) => (prev + 1) % scanSteps.length);
       }, 300);
     } else {
-      setScanStepIndex(0);
+      setTimeout(() => setScanStepIndex(0), 0);
     }
     return () => clearInterval(interval);
-  }, [localScanning, deepScanLoading]);
+  }, [localScanning, deepScanLoading, scanSteps.length]);
 
   const handleSubmit = (e) => {
     if (!urlInput.trim()) return;
@@ -484,7 +484,7 @@ export default function UrlCheckerTab({
                       <>
                         <div className="flex justify-between">
                           <span className="text-text-muted">Live Render Server Title</span>
-                          <span className="font-bold text-navy truncate max-w-[240px]">"{scanResult.deepScan.page.title}"</span>
+                          <span className="font-bold text-navy truncate max-w-[240px]">&quot;{scanResult.deepScan.page.title}&quot;</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-text-muted">Login Forms Count</span>

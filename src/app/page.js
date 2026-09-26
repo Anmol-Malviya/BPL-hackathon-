@@ -479,7 +479,7 @@ export default function Home() {
             ].map((t, i) => (
               <div key={i} className="p-8 rounded-2xl bg-bg-primary border border-slate-200/70 text-left flex flex-col justify-between shadow-sm">
                 <p className="text-text-secondary text-sm italic leading-relaxed">
-                  "{t.quote}"
+                  &quot;{t.quote}&quot;
                 </p>
                 <div className="mt-6 flex items-center gap-3 border-t border-slate-200/50 pt-4">
                   <div className="h-10 w-10 rounded-full bg-navy/10 flex items-center justify-center font-bold text-navy">
